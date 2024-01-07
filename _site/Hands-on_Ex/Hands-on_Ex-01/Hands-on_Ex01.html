@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Maaruni">
+<meta name="dcterms.date" content="2024-01-07">
 
 <title>IS415-GAA - Hands-on Exercise 1: Geospatial Data Wrangling with R</title>
 <style>
@@ -156,7 +157,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link active" data-scroll-target="#getting-started">Getting started</a>
+  <ul class="collapse">
+  <li><a href="#installing-and-loading-r-packages" id="toc-installing-and-loading-r-packages" class="nav-link" data-scroll-target="#installing-and-loading-r-packages">Installing and loading R packages</a></li>
+  </ul></li>
+  <li><a href="#importing-a-geospatial-data-in-shapefile-format" id="toc-importing-a-geospatial-data-in-shapefile-format" class="nav-link" data-scroll-target="#importing-a-geospatial-data-in-shapefile-format">Importing a Geospatial Data in shapefile format</a>
+  <ul class="collapse">
+  <li><a href="#plotting-the-geospatial-data" id="toc-plotting-the-geospatial-data" class="nav-link" data-scroll-target="#plotting-the-geospatial-data">Plotting the Geospatial Data</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -177,6 +191,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           </div>
   </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 7, 2024</p>
+    </div>
+  </div>
   
     
   </div>
@@ -186,13 +206,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Getting started</p>
-<p>Installing and loading R packages</p>
+<section id="getting-started" class="level1">
+<h1>Getting started</h1>
+<section id="installing-and-loading-r-packages" class="level2">
+<h2 class="anchored" data-anchor-id="installing-and-loading-r-packages">Installing and loading R packages</h2>
 <p>In this section, I will install and load tidyverse and sf packages.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Importing a geospatial data in shapefile format</p>
+</section>
+</section>
+<section id="importing-a-geospatial-data-in-shapefile-format" class="level1">
+<h1>Importing a Geospatial Data in shapefile format</h1>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mpsz <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, <span class="at">layer =</span> <span class="st">"MP14_SUBZONE_WEB_PL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -206,13 +231,10 @@ Bounding box:  xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33
 Projected CRS: SVY21</code></pre>
 </div>
 </div>
-<p>Plotting the Geospatial Data</p>
+<section id="plotting-the-geospatial-data" class="level2">
+<h2 class="anchored" data-anchor-id="plotting-the-geospatial-data">Plotting the Geospatial Data</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mpsz)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: plotting the first 9 out of 15 attributes; use max.plot = 15 to plot
-all</code></pre>
-</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -221,8 +243,14 @@ all</code></pre>
 </div>
 </div>
 </div>
+<ul>
+<li><p>‘#| eval: false’ —&gt; will make code not run and show output by default</p></li>
+<li><p>‘#| echo: false’ —&gt; hides code block in html page</p></li>
+</ul>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
