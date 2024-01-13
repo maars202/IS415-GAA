@@ -1,5 +1,10 @@
 ---
 title: "Hands-on_Ex02.qmd"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/13/2024
+date-modified: "`r Sys.Date()`"
 ---
 
 # Getting started
