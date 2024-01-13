@@ -23,3 +23,88 @@ Plot should appear here:
 ```{r}
 plot(mpsz)
 ```
+
+### Plotting Cycling Path 
+
+```{r}
+cyclingpath = st_read(dsn = "../../data/geospatial", 
+                         layer = "CyclingPathGazette")
+```
+
+Personal Observations: For polyline features, it has only 2 fields as shown above by the summary. There are 2558 different points that define this polyline possibly.
+
+### **Importing GIS data in kml format**
+
+```{r}
+preschool = st_read("../../data/geospatial/PreSchoolsLocation.kml")
+```
+
+It uses the wgs84 coordinates system which is different from the above two datasets. What other coordinate systems are better than this wgs84 coordinate system?
+
+### **Working with glimpse()**
+
+Glimpse() from dplyr package is similar to pd.describe() and pd.info() functions in python.
+
+```{r}
+glimpse(mpsz)
+```
+
+### **Working with *head()***
+
+head() in R is similar to pd.head() function in python.
+
+```{r}
+head(mpsz, n=5)  
+```
+
+It gives the top 5 entries present in the dataset unlike top 10 given as default in python pandas's head() function.
+
+## **Plotting the Geospatial Data**
+
+```{r}
+plot(mpsz)
+```
+
+Different types of geospatial data that can be visualised are:
+
+-   geometry
+
+-   specific attributes such as population (colors used to indicate which part of the range of population that region contains)
+
+Plotting only the geometry:
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+Plotting specific attribute - PLN_AREA_N:
+
+```{r}
+plot(mpsz["PLN_AREA_N"])
+```
+
+## Map Projection
+
+2 sets of geospatial data can be used to do map projection. An important step to map projection is converting both datasets to the same coordinate system. This step is called projection transformation.
+
+Finding the coordinate system of the current dataset:
+
+```{r}
+st_crs(mpsz)
+```
+
+As shown above, the current map is projected using the SVY21 coordinate system and it uses EPSG of 9001. For SVY21 coordinate system, 3414 is the correct EPSG code to be used.
+
+Changing the EPSG of the current dataset for its SVY21 coordinate system:
+
+```{r}
+mpsz3414 <- st_transform(mpsz, 3414)
+```
+
+Checking EPSG of dataset again:
+
+```{r}
+st_crs(mpsz3414)
+```
+
+It's ESPG has been changed to 3414.
