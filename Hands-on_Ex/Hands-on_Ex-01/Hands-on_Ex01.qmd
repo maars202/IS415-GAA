@@ -32,5 +32,3 @@ plot(mpsz)
 -   '#\| eval: false' —\> will make code not run and show output by default
 
 -   '#\| echo: false' —\> hides code block in html page
-
-

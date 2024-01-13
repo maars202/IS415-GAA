@@ -1,0 +1,26 @@
+---
+title: "Hands-on_Ex02.qmd"
+---
+
+# Getting started
+
+## Installing and loading R packages
+
+In this section, I will install and load tidyverse and sf packages.
+
+```         
+{r}
+pacman::p_load(tidyverse, sf)
+```
+
+```         
+{r}
+mpsz <- st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
+```
+
+Plot should appear here:
+
+```         
+{r}
+plot(mpsz)
+```
