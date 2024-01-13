@@ -12,7 +12,7 @@ In this section, I will install and load tidyverse and sf packages.
 pacman::p_load(tidyverse, sf)
 ```
 
-asda
+Checking plots on second exercise
 
 ```{r}
 mpsz <- st_read(dsn = "../../data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
