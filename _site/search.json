@@ -28,6 +28,20 @@
     "text": "Plotting the Geospatial Data\n\nplot(mpsz)\n\n\n\n\n\n\n\n\n\n‘#| eval: false’ —&gt; will make code not run and show output by default\n‘#| echo: false’ —&gt; hides code block in html page"
   },
   {
+    "objectID": "Hands-on_Ex/Hands-on_Ex-02/Hands-on_Ex02.html",
+    "href": "Hands-on_Ex/Hands-on_Ex-02/Hands-on_Ex02.html",
+    "title": "Hands-on_Ex02.qmd",
+    "section": "",
+    "text": "In this section, I will install and load tidyverse and sf packages.\n{r}\npacman::p_load(tidyverse, sf)\n{r}\nmpsz &lt;- st_read(dsn = \"../../data/geospatial\", layer = \"MP14_SUBZONE_WEB_PL\")\nPlot should appear here:\n{r}\nplot(mpsz)"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex-02/Hands-on_Ex02.html#installing-and-loading-r-packages",
+    "href": "Hands-on_Ex/Hands-on_Ex-02/Hands-on_Ex02.html#installing-and-loading-r-packages",
+    "title": "Hands-on_Ex02.qmd",
+    "section": "",
+    "text": "In this section, I will install and load tidyverse and sf packages.\n{r}\npacman::p_load(tidyverse, sf)\n{r}\nmpsz &lt;- st_read(dsn = \"../../data/geospatial\", layer = \"MP14_SUBZONE_WEB_PL\")\nPlot should appear here:\n{r}\nplot(mpsz)"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "IS415-GAA",

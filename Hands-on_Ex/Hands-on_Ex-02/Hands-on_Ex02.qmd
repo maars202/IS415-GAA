@@ -8,19 +8,18 @@ title: "Hands-on_Ex02.qmd"
 
 In this section, I will install and load tidyverse and sf packages.
 
-```         
-{r}
+```{r}
 pacman::p_load(tidyverse, sf)
 ```
 
-```         
-{r}
-mpsz <- st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
+asda
+
+```{r}
+mpsz <- st_read(dsn = "../../data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 ```
 
 Plot should appear here:
 
-```         
-{r}
+```{r}
 plot(mpsz)
 ```

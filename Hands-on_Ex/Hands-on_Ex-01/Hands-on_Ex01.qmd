@@ -20,7 +20,7 @@ pacman::p_load(tidyverse, sf)
 # Importing a Geospatial Data in shapefile format
 
 ```{r}
-mpsz <- st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
+mpsz <- st_read(dsn = "../../data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 ```
 
 ## Plotting the Geospatial Data
