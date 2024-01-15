@@ -1,22 +1,124 @@
 ---
 title: "In Class Exercise 2"
 author: "Maaruni"
+format: 
+  html: 
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    toc-depth: 4
 execute: 
   warning: false
+  eval: false
+  echo: true
+editor: visual
 date: 01/15/2024
 date-modified: "`r Sys.Date()`"
 ---
 
-Blk data type: Binary large objects
+In this hands-on exercise, the following R packages will be used.
 
-Importing the relevant packages from pacman:
+-   arrow,
+
+-   lubridate,
+
+-   tidyverse,
+
+-   tmap,
+
+-   sf.
+
+Importing the relevant packages using pacman:
 
 ```{r}
-pacman::p_load(sf, tidyverse)
+#| eval: true
+pacman::p_load(arrow, lubridate, tidyverse, sf, tmap, readr)
 ```
 
-Unable to load funModeling package using pacman!
+### Importing Grab-Posisi dataset
+
+Read the parquet file into a dataframe. The data in the dataframe can be viewed in the 'environment' tab.
 
 ```{r}
+df <- read_parquet("../../data/GrabPosisi/part-00000.parquet")
+```
 
+Convert the numerical data to POSIXct tiblr time format with the month and year more specifically stated:
+
+```{r}
+df$pingtimestamp <- as_datetime(df$pingtimestamp)
+```
+
+'datetime' is a lubridate function. '\$' sign allows you to access the 'pingtimestamp' field of the df dataframe.
+
+## Extracting trip origin locations
+
+```{r}
+origin_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(pingtimestamp) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         start_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+-   arrange() function is the same as pd.sort() in python pandas.
+
+❗ row_number() is generated after group_by() function is applied and its generated in all the entries within each group of trj_id.
+
+-   wday(), hour(), mday() defines which lubridation function to use to extract the weekday, hour, day (refer to lubridate library)
+
+-   factor() converts it to ordinal scale
+
+## Extracting trip end locations
+
+Own attempt:
+
+```{r}
+dest_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(pingtimestamp) %>%
+  filter(row_number()== n()) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         start_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+Correct solution uses different method of sorting pingtimestamps in descending order and getting the top entry instead of getting the last entry from ascending order in the above answer:
+
+```{r}
+destination_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(desc(pingtimestamp)) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         end_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+## Saving transformed dataframe results
+
+Writing the tranformed dataset as RDS (R Data Serialisation)
+
+```{r}
+write_rds(origin_df, "../../data/rds/origin_df.rds")
+write_rds(destination_df, "../../data/rds/destination.rds")
+write_rds(destination_df, "../../data/rds/dest.rds")
+```
+
+## Re-importing previously saved work
+
+Re-importing previously saved data:
+
+```{r}
+#| eval: false
+# origin_df <- read_rds("../../data/rds/origin_df.rds")
+# destination_df <- read_rds("../../data/rds/destination_df.rds")
 ```

@@ -1,0 +1,8 @@
+---
+title: "In Class Exercise 3"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/15/2024
+date-modified: "`r Sys.Date()`"
+---
