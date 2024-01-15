@@ -1,0 +1,22 @@
+---
+title: "In Class Exercise 2"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/15/2024
+date-modified: "`r Sys.Date()`"
+---
+
+Blk data type: Binary large objects
+
+Importing the relevant packages from pacman:
+
+```{r}
+pacman::p_load(sf, tidyverse)
+```
+
+Unable to load funModeling package using pacman!
+
+```{r}
+
+```
