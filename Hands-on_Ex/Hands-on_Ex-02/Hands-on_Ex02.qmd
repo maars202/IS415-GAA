@@ -29,7 +29,7 @@ Plot should appear here:
 plot(mpsz)
 ```
 
-### Plotting Cycling Path 
+### Plotting Cycling Path
 
 ```{r}
 cyclingpath = st_read(dsn = "../../data/geospatial", 
