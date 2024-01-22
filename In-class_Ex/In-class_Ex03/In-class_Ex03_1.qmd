@@ -122,7 +122,7 @@ plot(jw, main = "Jurong West")
 Load the relevant libraries:
 
 ```{r}
-#pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse)
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse)
 #pacman::p_load(sp, sf, rgdal, spNetwork, tmap)
 ```
 
@@ -164,8 +164,6 @@ Personal note:
 ```{r}
 tmap_mode('plot')
 ```
-
-## Network
 
 ```{r}
 lixels <- lixelize_lines(network, 750, mindist = 375)
