@@ -33,5 +33,40 @@
     "title": "In Class Exercise 3",
     "section": "Geospatial Wrangling",
     "text": "Geospatial Wrangling\n\nCreating ppp objects: sf method\n\n#childcare_ppp &lt;- as.ppp(childcare_sf)\n\n\n#summary(childcare_ppp)\n\nMust be a point type data\n\n#any(duplicate(childcare_ppp_jit))\n\nCreating owin object: sf mehthod\n\n#sg_owin &lt;- as.owin(sg_sf)\n\nPersonal note: need to be sf layer cannot be sp layer when converting to owin object!\nThe output objecct can be displayed by using plot() function.\n\n#summary(sg_owin)\n\n\npolygon boundary\nwindow area – unit of measurement should be meters since the other units are meters in the summary\n\n\n#pg &lt;- mpsz_sf %&gt;%\n  #filter(PLN_AREA_N == \"PUNGGOL\")\n#tm &lt;- mpsz_sf %&gt;%\n  #filter(PLN_AREA_N == \"TAMPINES\")\n#ck &lt;- mpsz_sf %&gt;%\n  #filter(PLN_AREA_N == \"CHUA CHU KANG\")\n#jw &lt;- mpsz_sf %&gt;%\n  #filter(PLN_AREA_N == \"JURONG WEST\")\n\n\nsimilar to sql: “select * from table where PLN_AREA_N ==”PUNGGOL”\n\nPlotting target planning areas\n\n#par(mfrow=c(2,2))\n#plot(pg, MAIN=\"PUNGGOL\")\n#plot(tm, MAIN=\"TAMPINES\")\n#plot(ck, MAIN=\"CHUA CHU KANG\")\n#plot(jw, MAIN=\"JURONG WEST\")\n\n\nplots will be slightly different since it is sf layer\n\ncorrect one:"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html",
+    "href": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html",
+    "title": "In Class Exercise 2",
+    "section": "",
+    "text": "In this hands-on exercise, the following R packages will be used.\nImporting the relevant packages using pacman:\nShow the code\npacman::p_load(arrow, lubridate, tidyverse, sf, tmap, readr)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#extracting-trip-origin-locations",
+    "href": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#extracting-trip-origin-locations",
+    "title": "In Class Exercise 2",
+    "section": "Extracting trip origin locations",
+    "text": "Extracting trip origin locations\n\n\nShow the code\norigin_df &lt;- df %&gt;%\n  group_by(trj_id) %&gt;%\n  arrange(pingtimestamp) %&gt;%\n  filter(row_number()==1) %&gt;%\n  mutate(weekday = wday(pingtimestamp,\n                        label=TRUE,\n                        abbr=TRUE),\n         start_hr = factor(hour(pingtimestamp)),\n         day = factor(mday(pingtimestamp)))\n\n\n\narrange() function is the same as pd.sort() in python pandas.\n\n❗ row_number() is generated after group_by() function is applied and its generated in all the entries within each group of trj_id.\n\nwday(), hour(), mday() defines which lubridation function to use to extract the weekday, hour, day (refer to lubridate library)\nfactor() converts it to ordinal scale"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#extracting-trip-end-locations",
+    "href": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#extracting-trip-end-locations",
+    "title": "In Class Exercise 2",
+    "section": "Extracting trip end locations",
+    "text": "Extracting trip end locations\nOwn attempt:\n\n\nShow the code\ndest_df &lt;- df %&gt;%\n  group_by(trj_id) %&gt;%\n  arrange(pingtimestamp) %&gt;%\n  filter(row_number()== n()) %&gt;%\n  mutate(weekday = wday(pingtimestamp,\n                        label=TRUE,\n                        abbr=TRUE),\n         start_hr = factor(hour(pingtimestamp)),\n         day = factor(mday(pingtimestamp)))\n\n\nCorrect solution uses different method of sorting pingtimestamps in descending order and getting the top entry instead of getting the last entry from ascending order in the above answer:\n\n\nShow the code\ndestination_df &lt;- df %&gt;%\n  group_by(trj_id) %&gt;%\n  arrange(desc(pingtimestamp)) %&gt;%\n  filter(row_number()==1) %&gt;%\n  mutate(weekday = wday(pingtimestamp,\n                        label=TRUE,\n                        abbr=TRUE),\n         end_hr = factor(hour(pingtimestamp)),\n         day = factor(mday(pingtimestamp)))"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#saving-transformed-dataframe-results",
+    "href": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#saving-transformed-dataframe-results",
+    "title": "In Class Exercise 2",
+    "section": "Saving transformed dataframe results",
+    "text": "Saving transformed dataframe results\nWriting the tranformed dataset as RDS (R Data Serialisation)\n\n\nShow the code\nwrite_rds(origin_df, \"../../data/rds/origin_df.rds\")\nwrite_rds(destination_df, \"../../data/rds/destination.rds\")\nwrite_rds(destination_df, \"../../data/rds/dest.rds\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#re-importing-previously-saved-work",
+    "href": "In-class_Ex/In-class_Ex02/Inclass_Ex02.html#re-importing-previously-saved-work",
+    "title": "In Class Exercise 2",
+    "section": "Re-importing previously saved work",
+    "text": "Re-importing previously saved work\nRe-importing previously saved data:\n\n\nShow the code\n# origin_df &lt;- read_rds(\"../../data/rds/origin_df.rds\")\n# destination_df &lt;- read_rds(\"../../data/rds/destination_df.rds\")"
   }
 ]
