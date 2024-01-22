@@ -206,3 +206,11 @@ The code chunk below is used to covert *sg* SpatialPolygon object into owin obje
 ```{r}
 sg_owin <- as(sg_sp, "owin")
 ```
+
+The ouput object can be displayed by using *plot()* function
+
+```{r}
+plot(sg_owin)
+```
+
+and *summary()* function of Base R.
