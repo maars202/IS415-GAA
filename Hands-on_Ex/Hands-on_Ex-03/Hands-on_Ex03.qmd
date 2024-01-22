@@ -22,7 +22,7 @@ pacman::p_load(maptools, sf, raster, spatstat, tmap)
 Please use this command in the console if unable to install maptools on mac:
 
 ```{r}
-install.packages("maptools", repos = "https://packagemanager.posit.co/cran/2023-10-13")
+# install.packages("maptools", repos = "https://packagemanager.posit.co/cran/2023-10-13")
 ```
 
 Reference: <https://stackoverflow.com/questions/77511849/i-have-obtained-some-error-trying-to-install-maptools-in-rstudio>
@@ -71,7 +71,7 @@ tmap_mode('plot')
 
 Notice that at the interactive mode, **tmap** is using [**leaflet for R**](https://rstudio.github.io/leaflet/) API. The advantage of this interactive pin map is it allows us to navigate and zoom around the map freely. We can also query the information of each simple feature (i.e. the point) by clicking of them. Last but not least, you can also change the background of the internet map layer. Currently, three internet map layers are provided. They are: ESRI.WorldGrayCanvas, OpenStreetMap, and ESRI.WorldTopoMap. The default is ESRI.WorldGrayCanvas.
 
-##  **Geospatial Data wrangling**
+## **Geospatial Data wrangling**
 
 Although simple feature data frame is gaining popularity again sp’s Spatial\* classes, there are, however, many geospatial analysis packages require the input geospatial data in sp’s Spatial\* classes. In this section, you will learn how to convert simple feature data frame to sp’s Spatial\* class.
 
@@ -124,7 +124,7 @@ childcare_sp
 sg_sp
 ```
 
-###  **Converting the generic sp format into spatstat’s ppp format**
+### **Converting the generic sp format into spatstat’s ppp format**
 
 ```{r}
 childcare_ppp <- as(childcare_sp, "ppp")
