@@ -118,3 +118,116 @@ plot(tm, main = "Tampines")
 plot(ck, main = "Choa Chu Kang")
 plot(jw, main = "Jurong West")
 ```
+
+Load the relevant libraries:
+
+```{r}
+#pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse)
+pacman::p_load(sp, sf, rgdal, spNetwork, tmap)
+```
+
+Read the punggol data:
+
+```{r}
+network <- st_read(dsn = "../../data/geospatial", layer = "Punggol_St")
+childcare <- st_read(dsn = "../../data/geospatial", layer = "Punggol_CC")
+```
+
+```{r}
+childcare <-spTransform(childcare,
+                        CRS("+init=epsg:3414"))
+network <- spTransform(network,
+                       CRS("+init=epsg:3414"))
+```
+
+We examine the structure.
+
+Personal Note: The minimum and maximum of x and y needed to ensure we are doing the kernal density within the right WINDOW!
+
+```{r}
+tmap_mode('view')
+tm_shape(childcare) + 
+  tm_dots() + 
+  tm_shape(network) + 
+  tm_lines()
+tmap_mode('plot')
+```
+
+Personal note:
+
+-   tm_shape(childcare) + tm_dots() + will plot first before tm_shape(network) + tm_lines() is plotted. So childcare data is added as dots first before network variable's data is plotted as lines afterwards.
+
+-   tm_map library uses LEAFLET library underneath its library so no need to create a new leaflet map yourself
+
+-   the different variables can be selected and deselected with the layers icons - using interactive mode!
+
+```{r}
+tmap_mode('plot')
+```
+
+## Network
+
+```{r}
+lixels <- lixelize_lines(network, 750, mindist = 375)
+```
+
+```{r}
+samples = lines_center(lixels)
+```
+
+On average, people are only willing to walk 750m based on a childcare centre study in NTU.So, 750 is chosen as window length for analysis. So, mindist is chosen as midpoint of 750 –\> 750/2.
+
+TIP: OSM dataset: We can remove the pedastrians, walkpaths, cycling paths can be removed since it is unnecessary and it will increase computation time when running your notebooks.
+
+```{r}
+densities <- nkde(network,
+                   events = childcare,
+                   w = rep(1, nrow(childcare)),
+                  samples = samples,
+                   kernel_name = "quartic",
+                   bw = 300,
+                   div = "bw",
+                   method = "simple",
+                   digits = 1,
+                   tol = 1,
+                   grid_shape = c(1,1),
+                   max_depth = 8,
+                   agg = 5, #we aggregate the events within a 5m radius (faster calculation)
+                   sparse = TRUE,
+                   verbose = FALSE)
+
+```
+
+```{r}
+samples$density <- densities
+lixels$density <- densities
+
+```
+
+```{r}
+# rescaling to help the mapping
+samples$density <- samples$density*1000
+lixels$density <- lixels$density*1000
+
+```
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels) + 
+  tm_lines(col = "density") +
+  tm_shape(childcare) + 
+  tm_dots()
+tmap_mode('plot')
+```
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines(col="density", auto.palette.mapping=FALSE,)+
+tm_shape(childcare)+
+  tm_dots()
+```
+
+```{r}
+tmap_mode('plot')
+```
