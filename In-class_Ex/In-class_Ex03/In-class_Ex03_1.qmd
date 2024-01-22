@@ -1,0 +1,120 @@
+---
+title: "In Class Exercise 3"
+---
+
+# Packages used
+
+```{r}
+#| eval: false
+install.packages("maptools", repos = "https://packagemanager.posit.co/cran/2023-10-13")
+```
+
+```{r}
+pacman::p_load(tidyverse, sf, maptools, raster,spatstat, tmap)
+```
+
+# Spatial Data Wrangling
+
+### Importing the spatial data
+
+In this section ***sf*** package will be used to import these 3 geosptial data sets into R. <https://github.com/spatstat/spatstat.explore> (<https://r-spatial.github.io/sf/reference/st_read.html)>
+
+If you stay in lang and long all the analysis will be inaccurate.
+
+```{r}
+childcare_sf <- st_read("../../data/geospatial/ChildCareServices.geojson") %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+mpsz_sf <- st_read(dsn = "../../data/geospatial", 
+                layer = "MP14_SUBZONE_WEB_PL")
+```
+
+```{r}
+plot(mpsz_sf)
+```
+
+# Creating Coastal Outline
+
+```{r}
+sg_sf <- mpsz_sf %>%
+  st_union()
+```
+
+```{r}
+plot(sg_sf)
+```
+
+environment: st_combine: mini points st_union: all will be combine into one point
+
+## Geospatial Data Wrangling
+
+### Creating ppp objects: sf methods
+
+converting sf dataframes to sp's spatial classes. Changes to spatial point data frames. Then converting sp to ppp format.
+
+```{r}
+childcare_ppp <- as.ppp(childcare_sf)
+```
+
+chilcare_ppp is a list: Have window and the information in the data.
+
+```{r}
+summary(childcare_ppp)
+```
+
+### Handling duplicated points
+
+We can check the duplication in ppp objects by using the code chunk (Remember: Always remember to check for duplicates in data)
+
+```{r}
+any(duplicated(childcare_ppp))
+```
+
+To count the number of co-incidence point, we will use the *mulitplicity()* function as shown below:
+
+```{r}
+multiplicity(childcare_ppp)
+```
+
+If we want to know how many locations have more than one point event:
+
+```{r}
+sum(multiplicity(childcare_ppp) > 1)
+```
+
+### Creating owin object: sf method
+
+```{r}
+sg_owin <- as.owin(sg_sf)
+```
+
+The output object can be displayed by using the *plot()* function
+
+```{r}
+plot(sg_owin)
+```
+
+Below the code in the sf way:
+
+```{r}
+pg <- mpsz_sf %>% 
+  filter(PLN_AREA_N == "PUNGGOL")
+tm <- mpsz_sf %>% 
+  filter(PLN_AREA_N == "TAMPINES")
+ck <- mpsz_sf %>% 
+  filter(PLN_AREA_N == "CHOA CHU KANG")
+jw <- mpsz_sf %>% 
+  filter(PLN_AREA_N == "JURONG WEST")
+```
+
+Plotting target planning areas
+
+```{r}
+par(mfrow=c(2,2))
+plot(pg, main = "Ponggol")
+plot(tm, main = "Tampines")
+plot(ck, main = "Choa Chu Kang")
+plot(jw, main = "Jurong West")
+```

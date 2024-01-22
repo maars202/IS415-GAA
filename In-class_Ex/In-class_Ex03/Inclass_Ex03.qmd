@@ -6,3 +6,85 @@ execute:
 date: 01/15/2024
 date-modified: "`r Sys.Date()`"
 ---
+
+Reading the relevant spatial data:
+
+```{r}
+#childcare_sf <- st_read("../../data/geospatial/ChildCareServices.geojson") %>%
+  #st_transform(crs = 3414)
+```
+
+```{r}
+#sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
+```
+
+```{r}
+#mpsz_sf <- st_read(dsn = "../../data/geospatial", 
+               # layer = "MP14_SUBZONE_WEB_PL")
+```
+
+### 
+
+## Geospatial Wrangling
+
+### Creating ppp objects: sf method
+
+```{r}
+#childcare_ppp <- as.ppp(childcare_sf)
+
+```
+
+```{r}
+#summary(childcare_ppp)
+```
+
+Must be a point type data
+
+```{r}
+#any(duplicate(childcare_ppp_jit))
+```
+
+Creating ***owin object: sf mehthod***
+
+```{r}
+#sg_owin <- as.owin(sg_sf)
+```
+
+Personal note: need to be sf layer cannot be sp layer when converting to owin object!
+
+The output objecct can be displayed by using *plot()* function.
+
+```{r}
+#summary(sg_owin)
+```
+
+-   polygon boundary
+
+-   window area – unit of measurement should be meters since the other units are meters in the summary
+
+```{r}
+#pg <- mpsz_sf %>%
+  #filter(PLN_AREA_N == "PUNGGOL")
+#tm <- mpsz_sf %>%
+  #filter(PLN_AREA_N == "TAMPINES")
+#ck <- mpsz_sf %>%
+  #filter(PLN_AREA_N == "CHUA CHU KANG")
+#jw <- mpsz_sf %>%
+  #filter(PLN_AREA_N == "JURONG WEST")
+```
+
+-   similar to sql: "select \* from table where PLN_AREA_N == "PUNGGOL"
+
+Plotting target planning areas
+
+```{r}
+#par(mfrow=c(2,2))
+#plot(pg, MAIN="PUNGGOL")
+#plot(tm, MAIN="TAMPINES")
+#plot(ck, MAIN="CHUA CHU KANG")
+#plot(jw, MAIN="JURONG WEST")
+```
+
+-   plots will be slightly different since it is sf layer
+
+correct one:
