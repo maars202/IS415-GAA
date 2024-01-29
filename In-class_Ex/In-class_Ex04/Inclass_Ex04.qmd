@@ -9,6 +9,12 @@ date-modified: "`r Sys.Date()`"
 
 # In Class Exercise 4
 
+-   GWmodel: for calibrating statistical models by explicitly incorporating weights - it doesnt use contiguity
+
+    -   provides collection of distance matrix to calculate some statistical analysis, multivariate statistics such as principle component analysis (PCA) and logistic regression, etc.
+
+    -   We are going to do summary statistics analysis - aggregation functions such as sum, average
+
 ```{r}
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel)
 ```
@@ -19,13 +25,42 @@ Import Data:
 hunan <- st_read(dsn = "../../data/geospatial", 
                  layer = "Hunan")
 
-hunan2012 <- st_read("../../data/aspatial/Hunan_2012.csv")
+hunan2012 <- read_csv("../../data/aspatial/Hunan_2012.csv", show_col_types = FALSE)
 ```
 
 ```{r}
 hunan <- left_join(hunan, hunan2012) %>%
 select (1:4, 7, 15)
 ```
+
+Currently hunan variable in sf. As an older library, gwmodel only accepts spatial data. So we need to convert from sf to spatial data.
+
+```{r}
+hunan_sp <- hunan %>%
+  as_Spatial()
+```
+
+```{r}
+gwstat <- gwss(data = hunan_sp, vars = "GDPPC", bw = 6, kernel = "bisquare", adaptive = TRUE, longlat = T)
+```
+
+Since adaptive = True, we need to specify the number of neighbors using bw = 6. If adaptive = False, we need to specify bw as the fixed distance needed to capture any number of neighbors within that distance. "bisquare" for kernel is similar to what we learnt in class slides like the formula.
+
+gwstat variable is saved in SDF object where it gives **summary statistics** of data and selecting 'data' key in SDF object shows you the data table. GDPPC_LM is based on **distance metrics instead of contiguity metrics** which is based on spatial window sum as discussed in the slides.
+
+### Homework 
+
+Plot similar to spatial window sum plots
+
+-   GDPPC_LM
+
+-   GDPPC_LSD
+
+-   LVar
+
+-   LSKe
+
+-   LCV
 
 # Revision of Hands On Exercise 4
 
