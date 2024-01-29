@@ -74,6 +74,8 @@ wm_r <- poly2nb(hunan, queen=FALSE)
 summary(wm_r)
 ```
 
+Recalling from lesson 1: Polygon is made of points in the form . Get only the centroid to get the central component:
+
 ```{r}
 longitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
 ```
@@ -81,6 +83,10 @@ longitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
 ```{r}
 latitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[2]])
 ```
+
+Warning: Dont sort the dataset since it will make the function miss out the true centroid!
+
+Combine them together:
 
 ```{r}
 coords <- cbind(longitude, latitude)
@@ -100,3 +106,5 @@ k1 <- knn2nb(knearneigh(coords))
 k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
 ```
+
+knearneigh - didnt specific how many neighbors we are looking at. So how will it know which closest neighbors to take?
