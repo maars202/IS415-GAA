@@ -7,6 +7,28 @@ date: 01/29/2024
 date-modified: "`r Sys.Date()`"
 ---
 
+# In Class Exercise 4
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel)
+```
+
+Import Data:
+
+```{r}
+hunan <- st_read(dsn = "../../data/geospatial", 
+                 layer = "Hunan")
+
+hunan2012 <- st_read("../../data/aspatial/Hunan_2012.csv")
+```
+
+```{r}
+hunan <- left_join(hunan, hunan2012) %>%
+select (1:4, 7, 15)
+```
+
+# Revision of Hands On Exercise 4
+
 ```{r}
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 ```
@@ -103,8 +125,66 @@ plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 ```{r}
 #coords <- coordinates(hunan)
 k1 <- knn2nb(knearneigh(coords))
+```
+
+knearneigh - didnt specific how many neighbors we are looking at. So how will it know which closest neighbors to take?
+
+```{r}
 k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
 ```
 
-knearneigh - didnt specific how many neighbors we are looking at. So how will it know which closest neighbors to take?
+According to the documentation, the latitude and longitude are in decimels and in kilometers unit.
+
+Use the maximum value from k1dists to find at least 1 neighbor. We round it off and use 62 as cut off to get the matrix. This is similar to the distance based matrix discussion in the slides, where instead of d = 650, we use d = 62km!
+
+NOTE: Ensure to use ceiling/rounded up max value of k1dists! This is to ensure we will capture at least 1 value.
+
+```{r}
+wm_d62 <- dnearneigh(coords, 0, 62, longlat = TRUE)
+wm_d62
+```
+
+Missing longlat will result in all neighbors being fetched.
+
+### **COMPUTING ADAPTIVE DISTANCE WEIGHT MATRIX**
+
+NOTE: One big difference: We specify the number of neighbors! So, instead of fetching uneven number of neighbors for each point like above, this will make the effor to search further for minimally 6 neighbors:
+
+```{r}
+knn6 <- knn2nb(knearneigh(coords, k=6))
+knn6
+```
+
+```{r}
+n_comp <- n.comp.nb(wm_d62)
+n_comp$nc
+```
+
+```{r}
+plot(hunan$geometry, border="lightgrey")
+plot(wm_d62, coords, add=TRUE)
+plot(k1, coords, add=TRUE, col="red", length=0.08)
+```
+
+## Side by Side Comparison of nearest neighbors vs distance link
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightgrey", main="1st nearest neighbours")
+plot(k1, coords, add=TRUE, col="red", length=0.08)
+plot(hunan$geometry, border="lightgrey", main="Distance link")
+plot(wm_d62, coords, add=TRUE, pch = 19, cex = 0.6)
+```
+
+Four different spatial lagged variables:
+
+-   spatial lag with row-standardized weights,
+
+-   spatial lag as a sum of neighbouring values,
+
+-   spatial window average, and (window functions - includes the diagonal neighbors!)
+
+-   spatial window sum. (window functions - includes the diagonal neighbors & similar to spatial lag as a sum of neighbouring values since it sums up all neighbors)
+
+By default, it will exclude the weights so in order to bring it in we need to be explicit.
