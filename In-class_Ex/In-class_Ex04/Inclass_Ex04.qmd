@@ -3,7 +3,7 @@ title: "In Class Exercise 4"
 author: "Maaruni"
 execute: 
   warning: false
-date: 01/15/2024
+date: 01/29/2024
 date-modified: "`r Sys.Date()`"
 ---
 
@@ -12,23 +12,91 @@ pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 ```
 
 ```{r}
-#hunan <- st_read(dsn = "../../data/geospatial", 
-                # layer = "Hunan")
+hunan <- st_read(dsn = "../../data/geospatial", 
+                 layer = "Hunan")
 
-#hunan2012 <- st_read("../../data/apatial/Hunan_2012.csv")
+hunan2012 <- st_read("../../data/aspatial/Hunan_2012.csv")
 ```
 
 ```{r}
-#hunan <- left_join(hunan, hunan2012) %>%
-#select (1:4, 7, 15)
+hunan <- left_join(hunan, hunan2012) %>%
+select (1:4, 7, 15)
 ```
 
-```{r}
-#basemap <- tm_shape(hunan) + tm_polygons() + tm_text("NAME_3", size = 0.5)
-#gdppc <- qtm(hunan, "GDPPC")
-#tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)
-```
-
-if no "by" field is detected, it will automatically choose the column that both tables share. Total number of columsn will be 36 = 29 + 8 - 1.
+Note: if no "by" field is detected, it will automatically choose the column that both tables share. Total number of columsn will be 36 = 29 + 8 - 1.
 
 Keep the most important columns and drop the rest. This should be similar to pd.drop(columns = \['name1'..\]).
+
+```{r}
+basemap <- tm_shape(hunan) + tm_polygons() + tm_text("NAME_3", size = 0.5)
+gdppc <- qtm(hunan, "GDPPC")
+tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)
+```
+
+```{r}
+wm_q <- poly2nb(hunan, queen=TRUE)
+summary(wm_q)
+```
+
+```{r}
+wm_q[[1]]
+```
+
+```{r}
+hunan$County[1]
+```
+
+```{r}
+hunan$NAME_3[c(2,3,4,57,85)]
+```
+
+### **CREATING (ROOK) CONTIGUITY BASED NEIGHBOURS**
+
+The code chunk below is used to compute Rook contiguity weight matrix.
+
+```{r}
+wm_r <- poly2nb(hunan, queen=FALSE)
+summary(wm_r)
+```
+
+Useful to compare it by plotting it.
+
+Need to see what lines are present in the queen continuity that are not present in the rook continuity? Queen method should have more lines since it explores closest 8 neighbors while rook only explores 4 neighbors!
+
+```{r}
+nb1 <- wm_q[[1]]
+nb1 <- hunan$GDPPC[nb1]
+nb1
+```
+
+```{r}
+wm_r <- poly2nb(hunan, queen=FALSE)
+summary(wm_r)
+```
+
+```{r}
+longitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
+```
+
+```{r}
+latitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[2]])
+```
+
+```{r}
+coords <- cbind(longitude, latitude)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightgrey", main="Queen Contiguity")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
+plot(hunan$geometry, border="lightgrey", main="Rook Contiguity")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
+```{r}
+#coords <- coordinates(hunan)
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
+summary(k1dists)
+```
