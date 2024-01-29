@@ -1,3 +1,44 @@
 ---
-title: "Take-home_Ex01"
+title: "lalala"
 ---
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list)
+```
+
+What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name 'gis_osm_roads_free_1':
+
+```{r}
+# road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
+```
+
+```{r}
+# tmap_mode('view')
+```
+
+Lets find all the columns of the raod_netowrk dataset and all the the unique values for each column:
+
+\<todo\>
+
+try to constraint the minimum x coordinate and y coorinate and max x coordinate adn y coordinate to get only Singapore!
+
+```{r}
+# a GPKG dataset - it lives in spData package
+#world_dataset <- system.file("shapes/world.gpkg", package = "spData")
+
+#st_layers(world_dataset)
+```
+
+```{r}
+  # tm_shape(road_network) + 
+  #   tm_dots()
+#tm_shape(road_network) + 
+#tm_lines()
+```
+
+All the different file names:
+
+```{r}
+#list<-list.files('../../data/takehomeassignment1', pattern="*", full.names=TRUE)
+#list
+```

@@ -1,8 +1,34 @@
 ---
-title: "In Class Exercise 3"
+title: "In Class Exercise 4"
 author: "Maaruni"
 execute: 
   warning: false
 date: 01/15/2024
 date-modified: "`r Sys.Date()`"
 ---
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
+```
+
+```{r}
+#hunan <- st_read(dsn = "../../data/geospatial", 
+                # layer = "Hunan")
+
+#hunan2012 <- st_read("../../data/apatial/Hunan_2012.csv")
+```
+
+```{r}
+#hunan <- left_join(hunan, hunan2012) %>%
+#select (1:4, 7, 15)
+```
+
+```{r}
+#basemap <- tm_shape(hunan) + tm_polygons() + tm_text("NAME_3", size = 0.5)
+#gdppc <- qtm(hunan, "GDPPC")
+#tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)
+```
+
+if no "by" field is detected, it will automatically choose the column that both tables share. Total number of columsn will be 36 = 29 + 8 - 1.
+
+Keep the most important columns and drop the rest. This should be similar to pd.drop(columns = \['name1'..\]).

@@ -9,7 +9,7 @@
 <meta name="author" content="Maaruni">
 <meta name="dcterms.date" content="2024-01-15">
 
-<title>IS415-GAA - In Class Exercise 3</title>
+<title>IS415-GAA - In Class Exercise 4</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -107,6 +141,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex-03/Hands-on_Ex03.html">
  <span class="dropdown-text">Hands-on Exercise 3</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex-04/Hands-on_Ex04.html">
+ <span class="dropdown-text">Hands-on Exercise 4</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -119,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
  <span class="dropdown-text">In-class Exercise 2</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../n-class_Ex/In-class_Ex03/In-class_Ex03_1.html">
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex03/In-class_Ex03_1.html">
  <span class="dropdown-text">In-class Exercise 3</span></a>
   </li>  
     </ul>
@@ -164,7 +202,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In Class Exercise 3</h1>
+<h1 class="title">In Class Exercise 4</h1>
 </div>
 
 
@@ -188,7 +226,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">Invalid Date</p>
+      <p class="date-modified">January 29, 2024</p>
     </div>
   </div>
     
@@ -199,6 +237,26 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, tmap, tidyverse, knitr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan &lt;- st_read(dsn = "../../data/geospatial", </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                <span class="co"># layer = "Hunan")</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan2012 &lt;- st_read("../../data/apatial/Hunan_2012.csv")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan &lt;- left_join(hunan, hunan2012) %&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#select (1:4, 7, 15)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#basemap &lt;- tm_shape(hunan) + tm_polygons() + tm_text("NAME_3", size = 0.5)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#gdppc &lt;- qtm(hunan, "GDPPC")</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>if no “by” field is detected, it will automatically choose the column that both tables share. Total number of columsn will be 36 = 29 + 8 - 1.</p>
+<p>Keep the most important columns and drop the rest. This should be similar to pd.drop(columns = [‘name1’..]).</p>
 
 
 
