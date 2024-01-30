@@ -48,7 +48,7 @@ Since adaptive = True, we need to specify the number of neighbors using bw = 6. 
 
 gwstat variable is saved in SDF object where it gives **summary statistics** of data and selecting 'data' key in SDF object shows you the data table. GDPPC_LM is based on **distance metrics instead of contiguity metrics** which is based on spatial window sum as discussed in the slides.
 
-### Homework 
+### Homework
 
 Plot similar to spatial window sum plots
 

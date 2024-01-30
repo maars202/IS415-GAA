@@ -9,7 +9,22 @@ pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list)
 What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name 'gis_osm_roads_free_1':
 
 ```{r}
-# road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
+road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
+```
+
+```{r}
+# typeof(road_network)  #<-- list type
+road_network
+```
+
+get maximum and minimum of each geometry point and see if it lies in boundayr of Singapore – then filter these rows and use map to plot only singapore geometry lines
+
+maybe can use this strategy:
+
+<https://stackoverflow.com/questions/60532357/extracting-min-and-max-coordinates-from-multipolygon-into-separate-columns>
+
+```{r}
+road_network$geometry[1]
 ```
 
 ```{r}
