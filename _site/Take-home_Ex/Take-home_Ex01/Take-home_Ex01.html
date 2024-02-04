@@ -22,40 +22,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -176,7 +142,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
         <li>
-    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html">
+    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex01/Take-home_Ex01_3.html">
  <span class="dropdown-text">Take-home Exercise 1</span></a>
   </li>  
     </ul>
@@ -234,7 +200,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">January 31, 2024</p>
+      <p class="date-modified">Invalid Date</p>
     </div>
   </div>
     
@@ -245,117 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spNetwork, tmap, classInt, viridis, tidyverse, list)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name ‘gis_osm_roads_free_1’:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>road_network <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/"</span>, <span class="at">layer =</span> <span class="st">"gis_osm_roads_free_1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Reading layer `gis_osm_roads_free_1' from data source 
-  `/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/takehomeassigment1/malaysia-singapore-brunei-latest-free' 
-  using driver `ESRI Shapefile'
-Simple feature collection with 1766969 features and 10 fields
-Geometry type: LINESTRING
-Dimension:     XY
-Bounding box:  xmin: 99.66041 ymin: 0.8021131 xmax: 119.2601 ymax: 7.514393
-Geodetic CRS:  WGS 84</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># typeof(road_network)  #&lt;-- list type</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>road_network</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Simple feature collection with 1766969 features and 10 fields
-Geometry type: LINESTRING
-Dimension:     XY
-Bounding box:  xmin: 99.66041 ymin: 0.8021131 xmax: 119.2601 ymax: 7.514393
-Geodetic CRS:  WGS 84
-First 10 features:
-    osm_id code      fclass                   name  ref oneway maxspeed layer
-1  4386520 5113     primary           Orchard Road &lt;NA&gt;      F       50     0
-2  4578273 5114   secondary    Jalan Bukit Bintang &lt;NA&gt;      F        0     0
-3  4579495 5122 residential         Jalan Nagasari &lt;NA&gt;      B        0     0
-4  4579533 5122 residential  Persiaran Raja Chulan &lt;NA&gt;      B        0     0
-5  4579534 5122 residential           Jalan Ceylon &lt;NA&gt;      B        0     0
-6  4579536 5122 residential Changkat Bukit Bintang &lt;NA&gt;      F        0     0
-7  4584656 5141     service                   &lt;NA&gt; &lt;NA&gt;      F        0    -1
-8  4585475 5122 residential       Jalan Hang Lekir &lt;NA&gt;      F        0     0
-9  4585480 5122 residential           Jalan Beremi &lt;NA&gt;      F        0     0
-10 4585482 5122 residential         Jalan Berangan &lt;NA&gt;      F        0     0
-   bridge tunnel                       geometry
-1       F      F LINESTRING (103.8301 1.3060...
-2       F      F LINESTRING (101.7226 3.1478...
-3       F      F LINESTRING (101.7084 3.1473...
-4       F      F LINESTRING (101.7043 3.1468...
-5       F      F LINESTRING (101.7033 3.1476...
-6       F      F LINESTRING (101.7088 3.1470...
-7       F      T LINESTRING (101.6995 3.1470...
-8       F      F LINESTRING (101.6959 3.1443...
-9       F      F LINESTRING (101.71 3.1473, ...
-10      F      F LINESTRING (101.7103 3.1472...</code></pre>
-</div>
-</div>
-<p>get maximum and minimum of each geometry point and see if it lies in boundayr of Singapore – then filter these rows and use map to plot only singapore geometry lines</p>
-<p>maybe can use this strategy:</p>
-<p><a href="https://stackoverflow.com/questions/60532357/extracting-min-and-max-coordinates-from-multipolygon-into-separate-columns" class="uri">https://stackoverflow.com/questions/60532357/extracting-min-and-max-coordinates-from-multipolygon-into-separate-columns</a></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>road_network<span class="sc">$</span>geometry[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Geometry set for 1 feature 
-Geometry type: LINESTRING
-Dimension:     XY
-Bounding box:  xmin: 103.8301 ymin: 1.305992 xmax: 103.8301 ymax: 1.306018
-Geodetic CRS:  WGS 84</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>bbox <span class="ot">&lt;-</span> road_network <span class="sc">%&gt;%</span> <span class="fu">st_bbox</span>()</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>bbox</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>       xmin        ymin        xmax        ymax 
- 99.6604116   0.8021131 119.2600995   7.5143933 </code></pre>
-</div>
-</div>
-<p><code>{![Elephant](../../../img/class2_1.jpg)}</code></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">getwd</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/Take-home_Ex/Take-home_Ex01"</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#road_network %&gt;% </span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#check if measurement is withing boundaries (yes, or not (no))</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#mutate( passes_through_box = ifelse( geometry &gt;= bbox[2] &amp; geometry &lt;= bbox[4] &amp; Lon &gt;= bbox[1] &amp; Lon &lt;= bbox[3], "yes", "no" ) ) %&gt;%</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">#group by SN</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#group_by( SN ) %&gt;%</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#check if any value of 'passes_through_box' in a group is "yes", if so 'yes', else 'no'</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#mutate( passes_through_box_anyime = ifelse( any( passes_through_box == "yes"), "yes", "no" ) )</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tmap_mode('view')</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Lets find all the columns of the raod_netowrk dataset and all the the unique values for each column:</p>
-<p>&lt;todo&gt;</p>
-<p>try to constraint the minimum x coordinate and y coorinate and max x coordinate adn y coordinate to get only Singapore!</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a GPKG dataset - it lives in spData package</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#world_dataset &lt;- system.file("shapes/world.gpkg", package = "spData")</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#st_layers(world_dataset)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tm_shape(road_network) + </span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   tm_dots()</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(road_network) + </span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_lines()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>All the different file names:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#list&lt;-list.files('../../data/takehomeassignment1', pattern="*", full.names=TRUE)</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#list</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<p>Please visit <a href="https://is415-gaa-maaruni.netlify.app/take-home_ex/take-home_ex01/take-home_ex01_3" class="uri">https://is415-gaa-maaruni.netlify.app/take-home_ex/take-home_ex01/take-home_ex01_3</a> for the correct assignment:</p>
 
 
 
