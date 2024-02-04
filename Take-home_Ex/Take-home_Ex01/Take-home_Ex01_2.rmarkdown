@@ -1,0 +1,1110 @@
+---
+title: "Take Home Exercise 1"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/22/2024
+date-modified: "`r Sys.Date()`"
+---
+
+
+The specific tasks of this take-home exercise are as follows:
+
+-   Using appropriate function of **sf** and **tidyverse**, preparing the following geospatial data layer in sf tibble data.frames:
+
+    -   Grab taxi location points either by origins or destinations.
+
+    -   Road layer within Singapore excluding outer islands.
+
+    -   Singapore boundary layer excluding outer islands
+
+-   Using the extracted data, derive traditional Kernel Density Estimation layers.
+
+-   Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
+
+-   Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
+
+-   Describe the spatial patterns revealed by the kernel density maps.
+
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep)
+```
+
+
+Reading the grab aspatial data:
+
+
+```{r}
+df <- read_parquet("../../data/GrabPosisi/part-00000.parquet")
+df
+```
+
+```{r}
+df$pingtimestamp <- as_datetime(df$pingtimestamp)
+```
+
+
+Grab taxi location points either by origins:
+
+
+```{r}
+origin_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(pingtimestamp) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         start_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+
+Grab taxi location points either by destinations:
+
+
+```{r}
+destination_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(desc(pingtimestamp)) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         end_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+destination_df
+```
+
+```{r}
+head(destination_df)
+```
+
+```{r}
+sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
+```
+
+```{r}
+mpsz_sf <- st_read(dsn = "../../data/geospatial", 
+                layer = "MP14_SUBZONE_WEB_PL")
+```
+
+
+### **MAPPING THE GEOSPATIAL DATA SETS**
+
+After checking the referencing system of each geospatial data data frame, it is also useful for us to plot a map to show their spatial patterns.
+
+
+```{r}
+plot(sg_sf)
+```
+
+```{r}
+plot(mpsz_sf)
+```
+
+```{r}
+trips_sf <- st_as_sf(destination_df, 
+                       coords = c("rawlng", "rawlat"),
+                       crs=4326) %>%
+st_transform(crs = 3414)
+glimpse(trips_sf)
+```
+
+
+Since we are only using the geometry data as part of our analysis let's grab that column only and view it.
+
+
+```{r}
+trips_sf_geometry <- trips_sf$geometry
+trips_sf_geometry
+```
+
+
+Notice that all the geospatial layers are within the same map extend. This shows that their referencing system and coordinate values are referred to similar spatial context. This is very important in any geospatial analysis.
+
+Alternatively, we can also prepare a pin map by using the code chunk below.
+
+Plotting the grab taxi data:
+
+
+```{r}
+tmap_mode('view')
+tm_shape(trips_sf_geometry)+
+  tm_dots()
+```
+
+
+## **GEOSPATIAL DATA WRANGLING**
+
+Although simple feature data frame is gaining popularity again sp’s Spatial\* classes, there are, however, many geospatial analysis packages require the input geospatial data in sp’s Spatial\* classes. In this section, we will convert simple feature data frame to sp’s Spatial\* class.
+
+### **CONVERTING SF DATA FRAMES TO SP’S SPATIAL\* CLASS**
+
+The code chunk below uses [*as_Spatial()*](https://r4gdsa.netlify.app/chap04.html) of **sf** package to convert the three geospatial data from simple feature data frame to sp’s Spatial\* class.
+
+
+```{r}
+grab_trips <- as_Spatial(trips_sf_geometry)
+mpsz <- as_Spatial(mpsz_sf)
+sg <- as_Spatial(sg_sf)
+```
+
+
+Lets view the data generated:
+
+
+```{r}
+grab_trips
+```
+
+```{r}
+mpsz
+```
+
+```{r}
+sg
+```
+
+
+### **CONVERTING THE SPATIAL\* CLASS INTO GENERIC SP FORMAT**
+
+**spatstat** requires the analytical data in ***ppp*** object form. There is no direct way to convert a Spatial\* classes into ***ppp*** object. We need to convert the ***Spatial*** **classes**\* into ***Spatial*** object first.
+
+The codes chunk below converts the Spatial\* classes into generic sp objects.
+
+
+```{r}
+#install.packages("maptools", repos = "https://packagemanager.posit.co/cran/2023-10-13")
+```
+
+```{r}
+grab_trips_sp <- as(grab_trips, "SpatialPoints")
+sg_sp <- as(sg, "SpatialPolygons")
+```
+
+
+Next, you should display the sp objects properties as shown below.
+
+
+```{r}
+grab_trips_sp
+```
+
+```{r}
+sg_sp
+```
+
+
+### **CONVERTING THE GENERIC SP FORMAT INTO SPATSTAT’S PPP FORMAT**
+
+
+```{r}
+grab_trips_ppp <- as(grab_trips_sp, "ppp")
+grab_trips_ppp
+```
+
+```{r}
+plot(grab_trips_ppp)
+```
+
+```{r}
+summary(grab_trips_ppp)
+```
+
+
+### **HANDLING DUPLICATED POINTS**
+
+We can check the duplication in a ***ppp*** object by using the code chunk below.
+
+
+```{r}
+any(duplicated(grab_trips_ppp))
+```
+
+
+Thus there are no duplicate data.
+
+### **CREATING *OWIN* OBJECT**
+
+When analysing spatial point patterns, it is a good practice to confine the analysis with a geographical area like Singapore boundary. In **spatstat**, an object called ***owin*** is specially designed to represent this polygonal region.
+
+The code chunk below is used to covert *sg* SpatialPolygon object into owin object of **spatstat**.
+
+
+```{r}
+sg_owin <- as(sg_sp, "owin")
+```
+
+
+The ouput object can be displayed by using *plot()* function
+
+
+```{r}
+plot(sg_owin)
+```
+
+
+### **COMBINING POINT EVENTS OBJECT AND OWIN OBJECT**
+
+In this last step of geospatial data wrangling, we will extract grab trip events that are located within Singapore by using the code chunk below.
+
+
+```{r}
+grab_trips_ppp_SG = grab_trips_ppp[sg_owin]
+```
+
+
+The output object combined both the point and polygon feature in one ppp object class as shown below.
+
+
+```{r}
+summary(grab_trips_ppp_SG)
+```
+
+```{r}
+plot(grab_trips_ppp_SG)
+```
+
+
+## **FIRST-ORDER SPATIAL POINT PATTERNS ANALYSIS**
+
+In this section, you will learn how to perform first-order SPPA by using **spatstat** package. The hands-on exercise will focus on:
+
+-   deriving **kernel density estimation (KDE)** layer for visualising and exploring the intensity of point processes,
+
+-   performing **Confirmatory Spatial Point Patterns Analysis** by using **Nearest Neighbour** statistics.
+
+### **KERNEL DENSITY ESTIMATION**
+
+In this section, you will learn how to compute the kernel density estimation (KDE) of grab trips in Singapore.
+
+#### **COMPUTING KERNEL DENSITY ESTIMATION USING AUTOMATIC BANDWIDTH SELECTION METHOD**
+
+The code chunk below computes a kernel density by using the following configurations of [*density()*](https://rdrr.io/cran/spatstat/man/density.ppp.html) of **spatstat**:
+
+-   [*bw.diggle()*](https://rdrr.io/cran/spatstat/man/bw.diggle.html) automatic bandwidth selection method. Other recommended methods are [*bw.CvL()*](https://rdrr.io/cran/spatstat/man/bw.CvL.html), [*bw.scott()*](https://rdrr.io/cran/spatstat/man/bw.scott.html) or [*bw.ppl()*](https://rdrr.io/cran/spatstat/man/bw.ppl.html).
+
+-   The smoothing kernel used is *gaussian*, which is the default. Other smoothing methods are: “epanechnikov”, “quartic” or “disc”.
+
+-   The intensity estimate is corrected for edge effect bias by using method described by Jones (1993) and Diggle (2010, equation 18.9). The default is *FALSE*.
+
+
+    ```{r}
+    kde_grab_trips_SG_bw <- density(grab_trips_ppp_SG,
+                                  sigma=bw.diggle,
+                                  edge=TRUE,
+                                kernel="gaussian") 
+    ```
+
+
+The *plot()* function of Base R is then used to display the kernel density derived.
+
+
+```{r}
+plot(kde_grab_trips_SG_bw)
+```
+
+
+The density values of the output range from 0 to 0.000035 which is way too small to comprehend. This is because the default unit of measurement of svy21 is in meter. As a result, the density values computed is in “number of points per square meter”.
+
+Before we move on to next section, it is good to know that you can retrieve the bandwidth used to compute the kde layer by using the code chunk below.
+
+
+```{r}
+bw <- bw.diggle(grab_trips_ppp_SG)
+bw
+```
+
+
+#### **RESCALLING KDE VALUES - Leads to better visualisation**
+
+In the code chunk below, *rescale()* is used to covert the unit of measurement from meter to kilometer.
+
+
+```{r}
+grab_trips_ppp_SG.km <- rescale(grab_trips_ppp_SG, 1000, "km")
+```
+
+
+Now, we can re-run *density()* using the resale data set and plot the output kde map.
+
+
+```{r}
+kde_grab_trips_SG.bw <- density(grab_trips_ppp_SG.km, sigma=bw.diggle, edge=TRUE, kernel="gaussian")
+plot(kde_grab_trips_SG.bw)
+```
+
+
+### **WORKING WITH DIFFERENT AUTOMATIC BADWIDTH METHODS**
+
+Beside *bw.diggle()*, there are three other **spatstat** functions can be used to determine the bandwidth, they are: *bw.CvL()*, *bw.scott()*, and *bw.ppl()*.
+
+Let us take a look at the bandwidth return by these automatic bandwidth calculation methods by using the code chunk below.
+
+
+```{r}
+ bw.CvL(grab_trips_ppp_SG.km)
+```
+
+```{r}
+bw.scott(grab_trips_ppp_SG.km)
+```
+
+```{r}
+bw.ppl(grab_trips_ppp_SG.km)
+```
+
+```{r}
+bw.diggle(grab_trips_ppp_SG.km)
+```
+
+
+Baddeley et. (2016) suggested the use of the *bw.ppl()* algorithm because in ther experience it tends to produce the more appropriate values when the pattern consists predominantly of tight clusters. But they also insist that if the purpose of once study is to detect a single tight cluster in the midst of random noise then the *bw.diggle()* method seems to work best.
+
+The code chunk beow will be used to compare the output of using *bw.diggle* and *bw.ppl* methods.
+
+
+```{r}
+kde_grab_trips_SG.ppl <- density(grab_trips_ppp_SG.km, 
+                               sigma=bw.ppl, 
+                               edge=TRUE,
+                               kernel="gaussian")
+par(mfrow=c(1,2))
+plot(kde_grab_trips_SG.bw, main = "bw.diggle")
+plot(kde_grab_trips_SG.ppl, main = "bw.ppl")
+```
+
+
+WORKING WITH DIFFERENT KERNEL METHODSBy default, the kernel method used in density.ppp() is gaussian. But there are three other options, namely: Epanechnikov, Quartic and Dics.The code chunk below will be used to compute three more kernel density estimations by using these three kernel function.
+
+
+```{r}
+
+par(mfrow=c(2,2))
+plot(density(grab_trips_ppp_SG.km, 
+             sigma=bw.ppl, 
+             edge=TRUE, 
+             kernel="gaussian"), 
+     main="Gaussian")
+plot(density(grab_trips_ppp_SG.km, 
+             sigma=bw.ppl, 
+             edge=TRUE, 
+             kernel="epanechnikov"), 
+     main="Epanechnikov")
+plot(density(grab_trips_ppp_SG.km, 
+             sigma=bw.ppl, 
+             edge=TRUE, 
+             kernel="quartic"), 
+     main="Quartic")
+plot(density(grab_trips_ppp_SG.km, 
+             sigma=bw.ppl, 
+             edge=TRUE, 
+             kernel="disc"), 
+     main="Disc")
+```
+
+
+## **FIXED AND ADAPTIVE KDE**
+
+### **COMPUTING KDE BY USING FIXED BANDWIDTH**
+
+Next, you will compute a KDE layer by defining a bandwidth of 600 meter. Notice that in the code chunk below, the sigma value used is 0.6. This is because the unit of measurement of grab_trips_ppp_SG.km object is in kilometer, hence the 600m is 0.6km.
+
+
+```{r}
+kde_grab_trips_600 <- density(grab_trips_ppp_SG.km, sigma=0.6, edge=TRUE, kernel="gaussian")
+plot(kde_grab_trips_600)
+```
+
+
+### **COMPUTING KDE BY USING ADAPTIVE BANDWIDTH**
+
+Fixed bandwidth method is very sensitive to highly skew distribution of spatial point patterns over geographical units for example urban versus rural. One way to overcome this problem is by using adaptive bandwidth instead.
+
+In this section, you will learn how to derive adaptive kernel density estimation by using [*density.adaptive()*](https://rdrr.io/cran/spatstat/man/adaptive.density.html) of **spatstat**.
+
+
+```{r}
+kde_grabtripssg_adaptive <- adaptive.density(grab_trips_ppp_SG.km, method="kernel")
+plot(kde_grabtripssg_adaptive)
+```
+
+
+We can compare the fixed and adaptive kernel density estimation outputs by using the code chunk below.
+
+
+```{r}
+par(mfrow=c(1,2))
+plot(kde_grab_trips_SG.bw, main = "Fixed bandwidth")
+plot(kde_grabtripssg_adaptive, main = "Adaptive bandwidth")
+```
+
+
+### **CONVERTING KDE OUTPUT INTO GRID OBJECT.**
+
+The result is the same, we just convert it so that it is suitable for mapping purposes
+
+
+```{r}
+gridded_kde_grabtripsSG_bw <- as.SpatialGridDataFrame.im(kde_grab_trips_SG.bw)
+spplot(gridded_kde_grabtripsSG_bw)
+```
+
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Next, we will convert the gridded kernal density objects into RasterLayer object by using *raster()* of **raster** package.
+
+
+```{r}
+kde_grabtrips_bw_raster <- raster(gridded_kde_grabtripsSG_bw)
+```
+
+
+Let us take a look at the properties of kde_grabtrips_bw_raster RasterLayer.
+
+
+```{r}
+kde_grabtrips_bw_raster
+```
+
+
+```         
+class      : RasterLayer 
+dimensions : 128, 128, 16384  (nrow, ncol, ncell)
+resolution : 0.4170614, 0.2647348  (x, y)
+extent     : 2.663926, 56.04779, 16.35798, 50.24403  (xmin, xmax, ymin, ymax)
+crs        : NA 
+source     : memory
+names      : v 
+values     : -6.837601e-15, 32.45281  (min, max)
+```
+
+Notice that the crs property is NA.
+
+#### **ASSIGNING PROJECTION SYSTEMS**
+
+The code chunk below will be used to include the CRS information on gridded_kde_grabtripsSG_bw RasterLayer.
+
+
+```{r}
+projection(kde_grabtrips_bw_raster) <- CRS("+init=EPSG:3414")
+kde_grabtrips_bw_raster
+```
+
+
+```         
+class      : RasterLayer 
+dimensions : 128, 128, 16384  (nrow, ncol, ncell)
+resolution : 0.4170614, 0.2647348  (x, y)
+extent     : 2.663926, 56.04779, 16.35798, 50.24403  (xmin, xmax, ymin, ymax)
+crs        : +proj=tmerc +lat_0=1.36666666666667 +lon_0=103.833333333333 +k=1 +x_0=28001.642 +y_0=38744.572 +ellps=WGS84 +units=m +no_defs 
+source     : memory
+names      : v 
+values     : -6.837601e-15, 32.45281  (min, max)
+```
+
+Notice that the crs property is completed.
+
+### **VISUALISING THE OUTPUT IN TMAP**
+
+Finally, we will display the raster in cartographic quality map using **tmap** package.
+
+
+```{r}
+tm_shape(kde_grabtrips_bw_raster) + 
+  tm_raster("v") +
+  tm_layout(legend.position = c("right", "bottom"), frame = FALSE)
+```
+
+
+### **COMPARING SPATIAL POINT PATTERNS USING KDE**
+
+In this section, you will learn how to compare KDE of grab trip destinations at Ponggol, Tampines, Chua Chu Kang and Jurong West planning areas.
+
+#### **EXTRACTING STUDY AREA**
+
+The code chunk below will be used to extract the target planning areas.
+
+
+```{r}
+pg = mpsz[mpsz@data$PLN_AREA_N == "PUNGGOL",]
+tm = mpsz[mpsz@data$PLN_AREA_N == "TAMPINES",]
+ck = mpsz[mpsz@data$PLN_AREA_N == "CHOA CHU KANG",]
+jw = mpsz[mpsz@data$PLN_AREA_N == "JURONG WEST",]
+```
+
+
+Plotting target planning areas
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(pg, main = "Ponggol")
+plot(tm, main = "Tampines")
+plot(ck, main = "Choa Chu Kang")
+plot(jw, main = "Jurong West")
+```
+
+
+#### **CONVERTING THE SPATIAL POINT DATA FRAME INTO GENERIC SP FORMAT**
+
+Next, we will convert these SpatialPolygonsDataFrame layers into generic spatialpolygons layers.
+
+
+```{r}
+pg_sp = as(pg, "SpatialPolygons")
+tm_sp = as(tm, "SpatialPolygons")
+ck_sp = as(ck, "SpatialPolygons")
+jw_sp = as(jw, "SpatialPolygons")
+```
+
+
+#### **CREATING *OWIN* OBJECT**
+
+Now, we will convert these SpatialPolygons objects into owin objects that is required by **spatstat**.
+
+
+```{r}
+pg_owin = as(pg_sp, "owin")
+tm_owin = as(tm_sp, "owin")
+ck_owin = as(ck_sp, "owin")
+jw_owin = as(jw_sp, "owin")
+```
+
+
+#### **COMBINING Grab Trips POINTS AND THE STUDY AREA**
+
+By using the code chunk below, we are able to extract grab trips destinations that is within the specific region to do our analysis later on.
+
+
+```{r}
+grab_trips_pg_ppp = grab_trips_ppp[pg_owin]
+grab_trips_tm_ppp = grab_trips_ppp[tm_owin]
+grab_trips_ck_ppp = grab_trips_ppp[ck_owin]
+grab_trips_jw_ppp = grab_trips_ppp[jw_owin]
+```
+
+
+Next, *rescale()* function is used to trasnform the unit of measurement from metre to kilometre.
+
+
+```{r}
+grab_trips_pg_ppp.km = rescale(grab_trips_pg_ppp, 1000, "km")
+grab_trips_tm_ppp.km = rescale(grab_trips_tm_ppp, 1000, "km")
+grab_trips_ck_ppp.km = rescale(grab_trips_ck_ppp, 1000, "km")
+grab_tripse_jw_ppp.km = rescale(grab_trips_jw_ppp, 1000, "km")
+```
+
+
+The code chunk below is used to plot these four study areas and the locations of the grab trip destinations.
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(grab_trips_pg_ppp.km, main="Punggol")
+plot(grab_trips_tm_ppp.km, main="Tampines")
+plot(grab_trips_ck_ppp.km, main="Choa Chu Kang")
+plot(grab_tripse_jw_ppp.km, main="Jurong West")
+```
+
+
+as we can the lower bottom part of Pungol is heavily saturated with driving trip destination end points.
+
+#### **COMPUTING KDE**
+
+The code chunk below will be used to compute the KDE of these four planning area. ***bw.diggle*** method is used to derive the bandwidth of each
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(density(grab_trips_pg_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Punggol")
+plot(density(grab_trips_tm_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Tempines")
+plot(density(grab_trips_ck_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Choa Chu Kang")
+plot(density(grab_tripse_jw_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="JUrong West")
+```
+
+
+## **NEAREST NEIGHBOUR ANALYSIS**
+
+In this section, we will perform the Clark-Evans test of aggregation for a spatial point pattern by using [*clarkevans.test()*](https://www.rdocumentation.org/packages/spatstat/versions/1.63-3/topics/clarkevans.test) of **statspat**.
+
+The test hypotheses are:
+
+Ho = The distribution of grab trips destinations are randomly distributed.
+
+H1= The distribution of grab trips destinations are not randomly distributed.
+
+The 95% confident interval will be used.
+
+### **TESTING SPATIAL POINT PATTERNS USING CLARK AND EVANS TEST**
+
+
+```{r}
+clarkevans.test(grab_trips_ppp_SG,
+                correction="none",
+                clipregion="sg_owin",
+                alternative=c("clustered"),
+                nsim=99)
+```
+
+
+### **CLARK AND EVANS TEST: CHOA CHU KANG PLANNING AREA**
+
+In the code chunk below, [*clarkevans.test()*](https://rdrr.io/cran/spatstat/man/clarkevans.test.html) of **spatstat** is used to performs Clark-Evans test of aggregation for grab trip destinations in Choa Chu Kang planning area.
+
+
+```{r}
+clarkevans.test(grab_trips_ck_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+
+### **CLARK AND EVANS TEST: TAMPINES PLANNING AREA**
+
+In the code chunk below, the similar test is used to analyse the spatial point patterns of grab trips destinations in Tampines planning area.
+
+
+```{r}
+clarkevans.test(grab_trips_tm_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+
+## Network constraint layers
+
+What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name 'gis_osm_roads_free_1':
+
+
+```{r}
+road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
+```
+
+```{r}
+# typeof(road_network)  #<-- list type
+road_network
+```
+
+
+The Projected CRS for the road_network above is SVY21 / Singapore TM due to the st_transform method we applied earlier when importing the data. Now, lets extract the geometry data and make it to a spatial object which can be converted to a psp object to be used for fitting inside Singapore's boundary window.
+
+
+```{r}
+pct_circ <- list()  ## create an empty list to store values
+n_iter = nrow(road_network)
+# Initializes the progress bar
+pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                     max = n_iter, # Maximum value of the progress bar
+                     style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                     width = 50,   # Progress bar width. Defaults to getOption("width")
+                     char = "=")   # Character used to create the bar
+
+for(i in 1:nrow(road_network)) { # loop over each row
+  
+  # Divide each value by the max and multiply by 100
+  #pct_circ[i] <- attributes(o$geometry[i])$bbox$xmin 
+  #103.6920359, 104.0120359, 1.1304753, 1.4504753
+  #103.6920359, 103.693, 1.1304753, 1.131
+  pct_circ[i] <- attributes(road_network$geometry[i])$bbox$xmin > 103.54	 & attributes(road_network$geometry[i])$bbox$xmax < 104.100274 & attributes(road_network$geometry[i])$bbox$ymin > 1.159704 & attributes(road_network$geometry[i])$bbox$ymax < 1.515345
+  setTxtProgressBar(pb,i)
+  
+} # End for loop
+#pct_circ
+```
+
+```{r}
+#rbind(Orange,m)
+m <- matrix(unlist(pct_circ), nrow = length(pct_circ))
+df3 <- cbind(road_network, m) 
+df3
+```
+
+```{r}
+filtered_road_networks <- filter(df3, m == TRUE)
+cat( "Percentage of dataset we are dealing with now", (dim(filtered_road_networks)[1] / dim(road_network)[1]) * 100)
+```
+
+```{r}
+filtered_road_networks <- st_transform(filtered_road_networks, crs = 3414)
+```
+
+```{r}
+road_network_sp_lines <- as_Spatial(filtered_road_networks$geometry)
+road_network_sp_lines
+```
+
+```{r}
+plot(road_network_sp_lines)
+```
+
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+
+```{r}
+#road_network_sp <- as(road_network_sp_lines, "SpatialPoints")
+#road_network_sp
+```
+
+
+since ppp is only used for SpatialPoints, psp is used for line segments and we convert it to that for windowing later
+
+
+```{r}
+#road_network_ppp <- as(road_network_sp, "ppp")
+#road_network_ppp
+```
+
+```{r}
+#road_network_psp <- as(road_network_sp, "psp")
+#road_network_psp
+```
+
+```{r}
+#road_network_psp = road_network_psp[sg_owin]
+```
+
+```{r}
+#plot(road_network_psp)
+```
+
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+
+```{r}
+lixels <- lixelize_lines.mc(filtered_road_networks, 
+                         700, 
+                         mindist = 350)
+lixels
+```
+
+
+Using multicore support for this function as there are alot of roads in Spatiallines object that need to be cut into specified minimal distance.
+
+### **7.6.2 GENERATING LINE CENTRE POINTS**
+
+Next, *lines_center()* of **spNetwork** will be used to generate a SpatialPointsDataFrame (i.e. samples) with line centre points as shown in the code chunk below.
+
+
+```{r}
+samples <- lines_center(lixels)
+```
+
+
+The points are located at center of the line based on the length of the line.
+
+
+```{r}
+trip_endings_df <- st_as_sf(destination_df, 
+                       coords = c("rawlng", "rawlat"),
+                       crs=4326) %>%
+st_transform(crs = 3414)
+glimpse(trip_endings_df)
+```
+
+```{r}
+filtered_road_networks[1:100,]
+```
+
+```{r}
+trip_endings_df[1:100,]
+```
+
+
+### **7.6.3 PERFORMING NETKDE**
+
+We are ready to computer the NetKDE by using the code chunk below.
+
+
+```{r}
+densities <- nkde(filtered_road_networks[1:1000,], 
+                  events = trip_endings_df[1:1000,],
+                  w = rep(1,nrow(trip_endings_df[1:1000,])),
+                  samples = samples,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  div= "bw", 
+                  method = "simple", 
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, #we aggregate events within a 5m radius (faster calculation)
+                  sparse = TRUE,
+                  verbose = FALSE)
+```
+
+
+#### **7.6.3.1 VISUALISING NETKDE**
+
+Before we can visualise the NetKDE values, code chunk below will be used to insert the computed density values (i.e. densities) into *samples* and *lixels* objects as *density* field.
+
+
+```{r}
+samples$density <- densities
+lixels$density <- densities
+```
+
+
+Since svy21 projection system is in meter, the computed density values are very small i.e. 0.0000005. The code chunk below is used to resale the density values from number of events per meter to number of events per kilometer.
+
+
+```{r}
+# rescaling to help the mapping
+samples$density <- samples$density*1000
+lixels$density <- lixels$density*1000
+```
+
+
+The code below uses appropriate functions of tmap package to prepare interactive and high cartographic quality map visualisation.
+
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines(col="density")+
+tm_shape(trip_endings_df)+
+  tm_dots()
+```
+
+```{r}
+tmap_mode('plot')
+```
+
+
+get maximum and minimum of each geometry point and see if it lies in boundayr of Singapore – then filter these rows and use map to plot only singapore geometry lines
+
+maybe can use this strategy:
+
+<https://stackoverflow.com/questions/60532357/extracting-min-and-max-coordinates-from-multipolygon-into-separate-columns>
+
+
+```{r}
+bbox <- road_network %>% st_bbox()
+```
+
+
+<http://bboxfinder.com/#0.802113,99.660412,7.514393,119.260099>
+
+![original_boundingbox](/img/original_boundingbox.png)/img/class2_1.jpg)
+
+![](http://bboxfinder.com/#0.802113,99.660412,7.514393,119.260099){fig-align="left"}
+
+bounding box that we want: (103.282066,1.049704,104.320274,1.615345)
+
+![](/img/whatwewant.png)
+
+xmin, ymin, xmax, ymax
+
+103.282066,1.049704,104.320274,1.615345
+
+Lets find all the columns of the raod_netowrk dataset and all the the unique values for each column:
+
+\<todo\>
+
+try to constraint the minimum x coordinate and y coorinate and max x coordinate adn y coordinate to get only Singapore!
+
+road_network_subset's only 2 points visibly lie in Singapore. How to filter with only lines that fall in Singapore?
+
+xmin, ymin, xmax, ymax
+
+103.54,1.159704,104.100274,1.515345
+
+## Getting Singapore roads
+
+
+```{r}
+pct_circ <- list()  ## create an empty list to store values
+n_iter = nrow(road_network)
+# Initializes the progress bar
+pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                     max = n_iter, # Maximum value of the progress bar
+                     style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                     width = 50,   # Progress bar width. Defaults to getOption("width")
+                     char = "=")   # Character used to create the bar
+
+for(i in 1:nrow(road_network)) { # loop over each row
+  
+  # Divide each value by the max and multiply by 100
+  #pct_circ[i] <- attributes(o$geometry[i])$bbox$xmin 
+  #103.6920359, 104.0120359, 1.1304753, 1.4504753
+  #103.6920359, 103.693, 1.1304753, 1.131
+  pct_circ[i] <- attributes(road_network$geometry[i])$bbox$xmin > 103.54	 & attributes(road_network$geometry[i])$bbox$xmax < 104.100274 & attributes(road_network$geometry[i])$bbox$ymin > 1.159704 & attributes(road_network$geometry[i])$bbox$ymax < 1.515345
+  setTxtProgressBar(pb,i)
+  
+} # End for loop
+#pct_circ
+close(pb)
+
+```
+
+```{r}
+#rbind(Orange,m)
+m <- matrix(unlist(pct_circ), nrow = length(pct_circ))
+df3 <- cbind(road_network, m) 
+df3
+```
+
+```{r}
+dim(road_network)[1]
+```
+
+```{r}
+filtered_road_networks <- filter(df3, m == TRUE)
+cat( "Percentage of dataset we are dealing with now", (dim(filtered_road_networks)[1] / dim(road_network)[1]) * 100)
+```
+
+```{r}
+plot(filtered_road_networks)
+```
+
+
+Yayyy!
+
+Uncomement below to view the map:
+
+
+```{r}
+#tmap_mode('view')
+#tm_shape(filtered_road_networks) + 
+#tm_lines()
+```
+
+
+This plotting step takes approximately 5 minutes. Grab a cup of coffee. Plots only within the boundaries that we defined earlier. Yay!
+
+## Network Kernel Density Estimation
+
+-   Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
+
+
+```{r}
+listings_sf <- st_as_sf(destination_df, 
+                       coords = c("rawlng", "rawlat"),
+                       crs=4326) %>%
+st_transform(crs = 3414)
+glimpse(listings_sf)
+```
+
+```{r}
+listings_sf <- st_sf(listings_sf, crs=4326)
+st_geometry(listings_sf)
+```
+
+```{r}
+trips <-spTransform(listings_sf,
+                        CRS("+init=epsg:3414"))
+network <- spTransform(filtered_road_networks,
+                       CRS("+init=epsg:3414"))
+```
+
+```{r}
+plot(filtered_road_networks)
+plot(listings_sf,add=T,col='red',pch = 19)
+```
+
+```{r}
+filtered_road_networks
+```
+
+```{r}
+print(st_crs(filtered_road_networks))
+filtered_road_networks <- st_transform(filtered_road_networks, crs = 3414)
+print(st_crs(filtered_road_networks))
+#preschool3414 <- st_transform(preschool, crs = 3414)
+```
+
+```{r}
+print(st_crs(listings_sf))
+listings_sf <- st_transform(listings_sf, crs = 3414)
+print(st_crs(listings_sf))
+```
+
+```{r}
+lixels <- lixelize_lines(filtered_road_networks, 
+                         1000, 
+                         mindist = 650)
+```
+
+```{r}
+lixels
+```
+
+
+## Plotting kernel density layers
+
+-   Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
+
+## Spatial Patterns Analysis
+
+-   Describe the spatial patterns revealed by the kernel density maps.
+
+<https://medium.com/>@statisticswithoutborders/r-function-of-the-week-apply-and-sapply-4a323902d25e
+
+
+```{r}
+movies <- c("SPYDERMAN","BATMAN","VERTIGO","CHINATOWN")
+findxmin <- function(r){
+    geom = attributes(r)$class$xmin
+    geom
+}
+o_min <-apply(o$geometry, findxmin)
+o_min
+```
+
+```{r}
+movies <- c("SPYDERMAN","BATMAN","VERTIGO","CHINATOWN")
+movies_lower <-lapply(movies, tolower)
+str(movies_lower)
+```
+
+```{r}
+typeof(o_xmin)
+```
+
+
+## Truncating a single point's line to just singapore
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+Key References:
+
+<https://cran.r-project.org/web/packages/spNetwork/vignettes/NKDE.html>
+

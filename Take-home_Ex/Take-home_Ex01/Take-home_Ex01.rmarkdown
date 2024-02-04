@@ -1,0 +1,184 @@
+---
+title: "Take Home Exercise 1"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/22/2024
+date-modified: "`r Sys.Date()`"
+---
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list)
+```
+
+
+What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name 'gis_osm_roads_free_1':
+
+
+```{r}
+road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
+```
+
+```{r}
+# typeof(road_network)  #<-- list type
+road_network
+```
+
+
+get maximum and minimum of each geometry point and see if it lies in boundayr of Singapore – then filter these rows and use map to plot only singapore geometry lines
+
+maybe can use this strategy:
+
+<https://stackoverflow.com/questions/60532357/extracting-min-and-max-coordinates-from-multipolygon-into-separate-columns>
+
+
+```{r}
+one_datapoint <- road_network$geometry[1]
+print(typeof(road_network$geometry[1]))
+print(road_network$geometry[1])
+print("----------")
+road_network$geometry[1]
+```
+
+```{r}
+box_check <- road_network$geometry[3]
+print( attributes(box_check)$bbox)
+boolval <- attributes(box_check)$bbox$xmin >= 103.282066 & attributes(box_check)$bbox$xmax <= 104.320274 & attributes(box_check)$bbox$ymin >= 1.049704 & attributes(box_check)$bbox$ymax <= 1.615345
+print("-----")
+print(boolval)
+```
+
+```{r}
+#print(attributes(one_datapoint))
+datapoint_attributes = attributes(one_datapoint)
+print(datapoint_attributes$bbox$xmin)
+```
+
+```{r}
+bbox <- road_network %>% st_bbox()
+```
+
+```{r}
+print(typeof(bbox))
+bbox$xmin <- 0
+bbox
+```
+
+
+<http://bboxfinder.com/#0.802113,99.660412,7.514393,119.260099>
+
+![original_boundingbox](/img/original_boundingbox.png)/img/class2_1.jpg)
+
+![box](http://bboxfinder.com/#0.802113,99.660412,7.514393,119.260099){fig-align="left"}
+
+
+```{r}
+print("hellloooo")
+print(getwd())
+```
+
+
+xmin, ymin, xmax, ymax
+
+bounding box that we want: (103.282066,1.049704,104.320274,1.615345)
+
+![](/img/whatwewant.png)
+
+xmin, ymin, xmax, ymax
+
+103.282066,1.049704,104.320274,1.615345
+
+
+```{r}
+m <- road_network %>% 
+  #check if measurement is withing boundaries (yes, or not (no))
+  mutate( passes_through_box = ifelse( attributes(geometry)$bbox$xmin >= 103.282066 & attributes(geometry)$bbox$xmax <= 104.320274 & attributes(geometry)$bbox$ymin >= 1.049704 & attributes(geometry)$bbox$ymax <= 1.615345, "yes", "no" ))
+                                       #& attributes(geometry)$bbox$xmin <= bbox[4] & Lon >= bbox[1] & Lon <= bbox[3], "yes", "no" ) 
+  #group by SN
+#group_by( SN ) %>%
+  #check if any value of 'passes_through_box' in a group is "yes", if so 'yes', else 'no'
+#mutate( passes_through_box_anyime = ifelse( any( passes_through_box == "yes"), "yes", "no" ) )
+print(head(m))
+m
+```
+
+```{r}
+n <- road_network %>% 
+  #check if measurement is withing boundaries (yes, or not (no))
+  mutate( passes_through_box = case_when(attributes(geometry)$bbox$xmin > 103.282066 & attributes(geometry)$bbox$xmax < 104.320274 & attributes(geometry)$bbox$ymin > 1.049704 & attributes(geometry)$bbox$ymax < 1.615345 ~ 'yes',
+  attributes(geometry)$bbox$xmin < 103.282066 |  attributes(geometry)$bbox$xmax > 104.320274 | attributes(geometry)$bbox$ymin < 1.049704 & attributes(geometry)$bbox$ymax > 1.615345 ~ 'no'))
+print(head(n))
+n
+```
+
+```{r}
+cat("unique values of r: ",  unique(n$passes_through_box))
+```
+
+```{r}
+cat("unique values of r: ",  unique(m$passes_through_box))
+```
+
+```{r}
+o <- road_network %>% 
+  #check if measurement is withing boundaries (yes, or not (no))
+  mutate( passes_through_box = case_when(attributes(geometry)$bbox$xmin < 103.282066 ~ 'left', attributes(geometry)$bbox$xmax > 104.320274 ~ 'right', attributes(geometry)$bbox$ymin < 1.049704 ~ 'bottom', attributes(geometry)$bbox$ymax > 1.615345 ~ 'top'))
+#print(head(o))
+o
+```
+
+```{r}
+box_check <- o$geometry[100000]
+print(box_check$bbox)
+print( attributes(box_check)$bbox)
+```
+
+
+```         
+1766969 vs 1766969
+```
+
+
+```{r}
+m[m$passes_through_box == 'yes',]
+```
+
+```{r}
+road_network
+```
+
+```{r}
+# tmap_mode('view')
+```
+
+
+Lets find all the columns of the raod_netowrk dataset and all the the unique values for each column:
+
+\<todo\>
+
+try to constraint the minimum x coordinate and y coorinate and max x coordinate adn y coordinate to get only Singapore!
+
+
+```{r}
+# a GPKG dataset - it lives in spData package
+#world_dataset <- system.file("shapes/world.gpkg", package = "spData")
+
+#st_layers(world_dataset)
+```
+
+```{r}
+  # tm_shape(road_network) + 
+  #   tm_dots()
+tm_shape(road_network) + 
+tm_lines()
+```
+
+
+All the different file names:
+
+
+```{r}
+#list<-list.files('../../data/takehomeassignment1', pattern="*", full.names=TRUE)
+#list
+```
+

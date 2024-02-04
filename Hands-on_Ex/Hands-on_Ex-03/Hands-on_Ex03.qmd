@@ -835,6 +835,12 @@ The points are located at center of the line based on the length of the line.
 We are ready to computer the NetKDE by using the code chunk below.
 
 ```{r}
+print(typeof(network))
+print(typeof(childcare))
+network
+```
+
+```{r}
 densities <- nkde(network, 
                   events = childcare,
                   w = rep(1,nrow(childcare)),

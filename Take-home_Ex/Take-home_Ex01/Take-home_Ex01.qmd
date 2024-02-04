@@ -7,8 +7,26 @@ date: 01/22/2024
 date-modified: "`r Sys.Date()`"
 ---
 
+The specific tasks of this take-home exercise are as follows:
+
+-   Using appropriate function of **sf** and **tidyverse**, preparing the following geospatial data layer in sf tibble data.frames:
+
+    -   Grab taxi location points either by origins or destinations.
+
+    -   Road layer within Singapore excluding outer islands.
+
+    -   Singapore boundary layer excluding outer islands
+
+-   Using the extracted data, derive traditional Kernel Density Estimation layers.
+
+-   Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
+
+-   Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
+
+-   Describe the spatial patterns revealed by the kernel density maps.
+
 ```{r}
-pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list)
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp)
 ```
 
 What are the different layers available as part of the gis dataset? Let us analyse the file structure. Lets add only the road layer with the name 'gis_osm_roads_free_1':
@@ -138,7 +156,7 @@ road_network
 ```
 
 ```{r}
-# tmap_mode('view')
+tmap_mode('view')
 ```
 
 Lets find all the columns of the raod_netowrk dataset and all the the unique values for each column:
@@ -157,6 +175,7 @@ try to constraint the minimum x coordinate and y coorinate and max x coordinate 
 ```{r}
   # tm_shape(road_network) + 
   #   tm_dots()
+tmap_mode('view')
 tm_shape(road_network) + 
 tm_lines()
 ```
@@ -167,3 +186,563 @@ All the different file names:
 #list<-list.files('../../data/takehomeassignment1', pattern="*", full.names=TRUE)
 #list
 ```
+
+## Plotting a single point and visualising it
+
+```{r}
+road_network_subset <- road_network[1:50,]
+road_network_subset
+```
+
+```{r}
+# tm_shape(road_network) + 
+  #   tm_dots()
+tm_shape(road_network_subset) + 
+tm_lines()
+
+```
+
+road_network_subset's only 2 points visibly lie in Singapore. How to filter with only lines that fall in Singapore?
+
+xmin, ymin, xmax, ymax
+
+103.282066,1.049704,104.320274,1.615345
+
+```{r}
+o <- road_network_subset %>% 
+  #check if measurement is withing boundaries (yes, or not (no))
+  mutate( passes_through_box = ifelse(attributes(geometry)$bbox$xmin > 103.282066 & attributes(geometry)$bbox$xmax < 104.320274 & attributes(geometry)$bbox$ymin > 1.049704 & attributes(geometry)$bbox$ymax < 1.615345, 'singapore', "NOTSINGAPORE"))
+o
+```
+
+```{r}
+#o[, o["passes_through_box"] == "NOTSINGAPORE"]
+for (i in 1:length(o)) {
+  #geometry <- attributes(o[i]$geometry[i])$bbox
+  geometry <- attr(o[i]$geometry[i], "bbox")
+  bool = geometry$xmin > 103.282066 & geometry$xmax < 104.320274 & geometry$ymin > 1.049704 & geometry$ymax < 1.615345
+  print("-------------------------------------------")
+  print(geometry)
+}
+```
+
+```{r}
+o_xmin <- mutate(o, o_min = o$geometry$bbox$xmin)
+o_xmin
+```
+
+```{r}
+# Sample data frame
+df <- data.frame(
+  A = c(1, 2, 3),
+  B = c(4, 5, 6)
+)
+
+# Function to apply to each row
+my_function <- function(row, index) {
+  cat("Row index:", index, "\n")
+  # Your computation or operations on the row here
+  # For example:
+  cat("Row values:", row, "\n")
+}
+
+# Apply function to each row
+apply(df, 1, function(x) my_function(x, index = .I))
+```
+
+<https://medium.com/>@statisticswithoutborders/r-function-of-the-week-apply-and-sapply-4a323902d25e
+
+```{r}
+## Load in data
+data('Orange')
+head(Orange)
+```
+
+```{r}
+max_circ <- max(Orange$circumference) # maximum circumference
+pct_circ <- list()  ## create an empty list to store values
+for(i in 1:nrow(Orange)) { # loop over each row
+  
+  # Divide each value by the max and multiply by 100
+  pct_circ[i] <- (Orange$circumference[i] / max_circ) * 100
+  
+} # End for loop
+pct_circ
+```
+
+```{r}
+pct_func <- function(x) {
+  result <- x / max_circ   # x is a vector/matrix
+  result <- result * 100 # convert from decimal to %
+  return(result)
+}
+res <- apply(Orange[,3,drop=F], 1, pct_func)
+m <- matrix(unlist(res), nrow = length(res))
+```
+
+```{r}
+print(typeof(Orange$circumference))
+print(typeof(o$geometry))
+# number of rows and columns:
+print(dim(o))
+```
+
+```{r}
+#rbind(Orange,m)
+df3 <- cbind(Orange, m) 
+df3
+```
+
+get column names:
+
+```{r}
+colnames(o)
+o$maxspeed
+```
+
+```{r}
+findxmin <- function(x) {
+  result <- attributes(x)$bbox$xmin   # x is a vector/matrix
+  result
+}
+findmax <- function(x) {
+  cat("adsfa", x)
+  x*2
+  
+}
+res <- apply(o[,3,drop=F], 1, findmax)
+res
+#m <- matrix(unlist(res), nrow = length(res))
+#m
+```
+
+since apply method doesnt work:
+
+```{r}
+print(nrow(road_network))
+```
+
+```{r}
+n_iter = 90
+# Initializes the progress bar
+pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                     max = n_iter, # Maximum value of the progress bar
+                     style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                     width = 50,   # Progress bar width. Defaults to getOption("width")
+                     char = "=")   # Character used to create the bar
+
+for(i in 1:n_iter) {
+
+    #---------------------
+    # Code to be executed
+    #---------------------
+  
+    Sys.sleep(0.1) # Remove this line and add your code
+  
+    #---------------------
+
+    # Sets the progress bar to the current state
+    setTxtProgressBar(pb, i)
+}
+
+close(pb) # Close the connection
+```
+
+## Getting Singapore roads
+
+```{r}
+pct_circ <- list()  ## create an empty list to store values
+n_iter = nrow(road_network)
+# Initializes the progress bar
+pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                     max = n_iter, # Maximum value of the progress bar
+                     style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                     width = 50,   # Progress bar width. Defaults to getOption("width")
+                     char = "=")   # Character used to create the bar
+
+for(i in 1:nrow(road_network)) { # loop over each row
+  
+  # Divide each value by the max and multiply by 100
+  #pct_circ[i] <- attributes(o$geometry[i])$bbox$xmin 
+  #103.6920359, 104.0120359, 1.1304753, 1.4504753
+  #103.6920359, 103.693, 1.1304753, 1.131
+  pct_circ[i] <- attributes(road_network$geometry[i])$bbox$xmin > 103.6920359	 & attributes(road_network$geometry[i])$bbox$xmax < 104.0120359 & attributes(road_network$geometry[i])$bbox$ymin > 1.1304753 & attributes(road_network$geometry[i])$bbox$ymax < 1.4504753
+  setTxtProgressBar(pb,i)
+  
+} # End for loop
+#pct_circ
+close(pb)
+
+```
+
+```{r}
+#rbind(Orange,m)
+m <- matrix(unlist(pct_circ), nrow = length(pct_circ))
+df3 <- cbind(road_network, m) 
+df3
+```
+
+```{r}
+dim(road_network)[1]
+```
+
+```{r}
+filtered_road_networks <- filter(df3, m == TRUE)
+cat("filtered_road_networks: ", dim(filtered_road_networks)[1])
+cat( "Percentage of dataset we are dealing with now", (dim(filtered_road_networks)[1] / dim(road_network)[1]) * 100, "with dim(filtered_road_networks)[1]: ", dim(filtered_road_networks)[1])
+```
+
+```{r}
+filtered_road_networks <- filtered_road_networks[1:15910, ]
+cat( "Percentage of dataset we are dealing with now", (dim(filtered_road_networks)[1] / dim(road_network)[1]) * 100)
+```
+
+Yayyy!
+
+Uncomement below to view the map:
+
+```{r}
+tmap_mode('view')
+tm_shape(filtered_road_networks) + 
+tm_lines()
+```
+
+This plotting step takes approximately 5 minutes. Grab a cup of coffee. Plots only within the boundaries that we defined earlier. Yay!
+
+// grab data shd be similar to childcare geojson data :
+
+```{r}
+childcare_sf <- st_read("../../data/geospatial/ChildCareServices.geojson") %>%
+  st_transform(crs = 3414)
+head(childcare_sf)
+```
+
+```{r}
+df <- read_parquet("../../data/GrabPosisi/part-00000.parquet")
+df
+```
+
+```{r}
+df$pingtimestamp <- as_datetime(df$pingtimestamp)
+```
+
+Grab taxi location points either by origins:
+
+```{r}
+origin_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(pingtimestamp) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         start_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+Grab taxi location points either by destinations:
+
+```{r}
+destination_df <- df %>%
+  group_by(trj_id) %>%
+  arrange(desc(pingtimestamp)) %>%
+  filter(row_number()==1) %>%
+  mutate(weekday = wday(pingtimestamp,
+                        label=TRUE,
+                        abbr=TRUE),
+         end_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+destination_df
+```
+
+```{r}
+typeof(destination_df$rawlat[1])
+typeof(destination_df$rawlng[1])
+```
+
+```{r setup, include=FALSE}
+pct_circ2 <- list()  ## create an empty list to store values
+for(i in 1:nrow(destination_df)) { # loop over each row
+  pct_circ2[i] <- st_point(c(destination_df$rawlat[i],destination_df$rawlng[i]))
+  } # End for loop
+i = 2
+pct_circ2
+```
+
+```{r}
+print(dim(pct_circ2))
+typeof(pct_circ2)
+pct_circ2
+```
+
+```{r}
+m <- matrix(unlist(pct_circ2), nrow = length(pct_circ2))
+df4 <- cbind(destination_df, m) 
+df4
+```
+
+```{r}
+destination_df$rawlng[1]
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+coord2s <- list()  ## create an empty list to store values
+for(i in 1:nrow(destination_df)) { # loop over each row
+  coord2s[i] <- c(destination_df$rawlat[i], destination_df$rawlng[i])
+  print(destination_df$rawlat[i])
+  if (i == 2) {break}
+  } # End for loop
+
+items <- purrr::map(coord2s, st_point) %>%
+  st_as_sfc()
+print(typeof(items))
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+coord2s <- list()  ## create an empty list to store values
+for(i in 1:nrow(destination_df)) { # loop over each row
+  coord2s[i] <- st_point(c(destination_df$rawlat[i], destination_df$rawlng[i]))
+  print(destination_df$rawlat[i])
+  if (i == 2) {break}
+  } # End for loop
+
+sfc = st_sfc(coord2s)
+sfc
+```
+
+```{r}
+head(destination_df)
+```
+
+```{r}
+my_df <- as.data.frame(destination_df)
+library(magrittr) #for the pipe
+df <- my_df %>%
+  dplyr::mutate(lon = sf::st_coordinates(.)[,6],
+                lat = sf::st_coordinates(.)[,5])
+```
+
+```{r}
+coords <- list(
+  c(49.45082, 11.07702),
+  c(49.45006, 11.07262),
+  c(49.45704, 11.08664)
+)
+
+purrr::map(coords, st_point) %>%
+  st_as_sfc()
+```
+
+```{r}
+dat <- tibble(geometry = coords)
+
+dat %>%
+  mutate(geometry = purrr::map(geometry, st_point) %>%
+           st_as_sfc())
+```
+
+```{r}
+pt1 = st_point(c(0,1))
+coords <- cbind(0, 1)
+print(coords)
+pt1
+```
+
+## Traditional KDE Layers
+
+-   Using the extracted data, derive traditional Kernel Density Estimation layers.
+
+## Network Kernel Density Estimation
+
+-   Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
+
+```{r}
+childcare <- st_read(dsn="../../data/geospatial",
+                     layer="Punggol_CC")
+
+head(childcare)
+```
+
+```{r}
+n <- unlist(childcare$geometry) 
+print(n[4])
+typeof(n)
+print(typeof(childcare$geometry[1][1]))
+```
+
+```{r}
+location <- st_point(c(1,2))
+location
+```
+
+```{r}
+# use log and lat to make georeference col
+#destination_df$Geometry = st_as_sfc(destination_df$`New Georeferenced Column`, as_points = TRUE)
+#head(wp_nga)
+```
+
+```{r}
+library(magrittr) #for the pipe
+my_df <- as.data.frame(destination_df)
+df <- my_df %>%
+  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
+                lat = sf::st_coordinates(.)[,2])
+```
+
+```{r}
+df <- destination_df
+separated_coord <- df %>%
+    mutate(long = unlist(map(df$geometry,1)),
+           lat = unlist(map(df$geometry,2)))
+
+separated_coord
+```
+
+```{r}
+wp_nga$Geometry = st_as_sfc(wp_nga$`New Georeferenced Column`)
+```
+
+```{r}
+listings_sf <- st_as_sf(destination_df, 
+                       coords = c("rawlng", "rawlat"),
+                       crs=4326) %>%
+st_transform(crs = 3414)
+glimpse(listings_sf)
+```
+
+```{r}
+listings_sf <- st_sf(listings_sf, crs=4326)
+st_geometry(listings_sf)
+```
+
+```{r}
+trips <-spTransform(listings_sf,
+                        CRS("+init=epsg:3414"))
+network <- spTransform(filtered_road_networks,
+                       CRS("+init=epsg:3414"))
+```
+
+```{r}
+plot(filtered_road_networks)
+plot(listings_sf,add=T,col='red',pch = 19)
+```
+
+```{r}
+filtered_road_networks
+```
+
+```{r}
+print(st_crs(filtered_road_networks))
+filtered_road_networks <- st_transform(filtered_road_networks, crs = 3414)
+print(st_crs(filtered_road_networks))
+#preschool3414 <- st_transform(preschool, crs = 3414)
+```
+
+```{r}
+print(st_crs(listings_sf))
+listings_sf <- st_transform(listings_sf, crs = 3414)
+print(st_crs(listings_sf))
+```
+
+```{r}
+lixels <- lixelize_lines(filtered_road_networks, 
+                         1000, 
+                         mindist = 650)
+```
+
+```{r}
+lixels
+```
+
+```{r}
+samples <- lines_center(lixels)
+```
+
+```{r}
+densities <- nkde(filtered_road_networks, 
+                  events = listings_sf,
+                  w = rep(1,nrow(listings_sf)),
+                  samples = samples,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  div= "bw", 
+                  method = "simple", 
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, #we aggregate events within a 5m radius (faster calculation)
+                  sparse = TRUE,
+                  verbose = FALSE)
+```
+
+```{r}
+samples$density <- densities
+lixels$density <- densities
+```
+
+```{r}
+# rescaling to help the mapping
+samples$density <- samples$density*1000
+lixels$density <- lixels$density*1000
+```
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines(col="density")+
+tm_shape(listings_sf)+
+  tm_dots()
+
+
+```
+
+```{r}
+tmap_mode('plot')
+```
+
+## Plotting kernel density layers
+
+-   Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
+
+## Spatial Patterns Analysis
+
+-   Describe the spatial patterns revealed by the kernel density maps.
+
+<https://medium.com/>@statisticswithoutborders/r-function-of-the-week-apply-and-sapply-4a323902d25e
+
+```{r}
+movies <- c("SPYDERMAN","BATMAN","VERTIGO","CHINATOWN")
+findxmin <- function(r){
+    geom = attributes(r)$class$xmin
+    geom
+}
+o_min <-apply(o$geometry, findxmin)
+o_min
+```
+
+```{r}
+movies <- c("SPYDERMAN","BATMAN","VERTIGO","CHINATOWN")
+movies_lower <-lapply(movies, tolower)
+str(movies_lower)
+```
+
+```{r}
+typeof(o_xmin)
+```
+
+## Truncating a single point's line to just singapore
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+Key References:
+
+<https://cran.r-project.org/web/packages/spNetwork/vignettes/NKDE.html>
