@@ -44,12 +44,14 @@ Describe the spatial patterns revealed by the kernel density maps
 
 ## Data Acquisition
 
-| Dataset Name                       | Source                                                       |
+oen
+
+| Dataset Name                                               | Source                                                       |
 |---------------------------|---------------------------------------------|
-| Grab Posisi Dataset                | <https://engineering.grab.com/grab-posisi>                   |
-| MPSZ-2019 Zonal data of Singapore  | Provided                                                     |
-| Coastal Boundary Data of Singapore | Provided                                                     |
-| OpenStreetMap Road Network Dataset | [Geofabrik download server](https://download.geofabrik.de/). |
+| Grab Posisi Dataset                                        | <https://engineering.grab.com/grab-posisi>                   |
+| MPSZ-2019 Zonal data of Singapore                          | Master Plan 2019 Subzone Boundary (No Sea) from Data.gov.sg  |
+| Coastal Boundary Data of Singapore (ESRI shapefile format) | Provided by SLA                                              |
+| OpenStreetMap Road Network Dataset                         | [Geofabrik download server](https://download.geofabrik.de/). |
 
 ## **Installing and Loading Packages**
 
@@ -409,7 +411,7 @@ plot(kde_grab_trips_600)
 
 ### **COMPUTING KDE BY USING ADAPTIVE BANDWIDTH**
 
-Fixed bandwidth method is very sensitive to highly skew distribution of spatial point patterns over geographical units for example urban versus rural. One way to overcome this problem is by using adaptive bandwidth instead.
+Fixed bandwidth method is very sensitive to highly skew distribution of spatial point patterns over geographical units for example urban versus rural. One way to overcome this problem is by using adaptive bandwidth instead. However, since in Singapore, it is a small city with fully urban zones, adaptive bandwidth will be unnecessary and fixed bandwidth will be more suitable. However, we will experiment and display both to see the difference.
 
 In this section, we will derive adaptive kernel density estimation by using [*density.adaptive()*](https://rdrr.io/cran/spatstat/man/adaptive.density.html) of **spatstat**.
 
@@ -434,6 +436,8 @@ The result is the same, we just convert it so that it is suitable for mapping pu
 gridded_kde_grabtripsSG_bw <- as.SpatialGridDataFrame.im(kde_grab_trips_SG.bw)
 spplot(gridded_kde_grabtripsSG_bw)
 ```
+
+As can be seen above, the highest trip destinations occur in central area and east area near Changi. We may assume many people going to the airport may be rushing there with their large luggages using ride hailing services. Thus, there is a lot of grab trips with their destinations being at Changi airport area.
 
 #### **CONVERTING GRIDDED OUTPUT INTO RASTER**
 
@@ -464,7 +468,7 @@ Notice that the crs property is NA.
 
 #### **ASSIGNING PROJECTION SYSTEMS**
 
-The code chunk below will be used to include the CRS information on gridded_kde_grabtripsSG_bw RasterLayer.
+The code chunk below will be used to include the CRS information on gridded_kde_grabtripsSG_bw RasterLayer. It has been projected to Singapore's coordinate system using 3414.
 
 ```{r}
 projection(kde_grabtrips_bw_raster) <- CRS("+init=EPSG:3414")
@@ -504,9 +508,15 @@ In this section, you will learn how to compare KDE of grab trip destinations at 
 
 The code chunk below will be used to extract the target planning areas.
 
+Lets view all available zones to zoom it on:
+
 ```{r}
-pg = mpsz[mpsz@data$PLN_AREA_N == "PUNGGOL",]
-tm = mpsz[mpsz@data$PLN_AREA_N == "TAMPINES",]
+print(mpsz@data$PLN_AREA_N)
+```
+
+```{r}
+pg = mpsz[mpsz@data$PLN_AREA_N == "CHANGI",]
+tm = mpsz[mpsz@data$PLN_AREA_N == "MARINE PARADE",]
 ck = mpsz[mpsz@data$PLN_AREA_N == "CHOA CHU KANG",]
 jw = mpsz[mpsz@data$PLN_AREA_N == "JURONG WEST",]
 ```
@@ -515,8 +525,8 @@ Plotting target planning areas
 
 ```{r}
 par(mfrow=c(2,2))
-plot(pg, main = "Ponggol")
-plot(tm, main = "Tampines")
+plot(pg, main = "Changi")
+plot(tm, main = "Marine Parade")
 plot(ck, main = "Choa Chu Kang")
 plot(jw, main = "Jurong West")
 ```
@@ -567,8 +577,8 @@ Let's plot these four study areas and the locations of the grab trip destination
 
 ```{r}
 par(mfrow=c(2,2))
-plot(grab_trips_pg_ppp.km, main="Punggol")
-plot(grab_trips_tm_ppp.km, main="Tampines")
+plot(grab_trips_pg_ppp.km, main="Changi")
+plot(grab_trips_tm_ppp.km, main="Marine Parade")
 plot(grab_trips_ck_ppp.km, main="Choa Chu Kang")
 plot(grab_tripse_jw_ppp.km, main="Jurong West")
 ```
@@ -585,12 +595,12 @@ plot(density(grab_trips_pg_ppp.km,
              sigma=bw.diggle, 
              edge=TRUE, 
              kernel="gaussian"),
-     main="Punggol")
+     main="Changi")
 plot(density(grab_trips_tm_ppp.km, 
              sigma=bw.diggle, 
              edge=TRUE, 
              kernel="gaussian"),
-     main="Tempines")
+     main="Marine Parade")
 plot(density(grab_trips_ck_ppp.km, 
              sigma=bw.diggle, 
              edge=TRUE, 
@@ -639,17 +649,21 @@ clarkevans.test(grab_trips_ck_ppp,
                 nsim=999)
 ```
 
-### **CLARK AND EVANS TEST: TAMPINES PLANNING AREA**
+Since R \< 1, it indicates there is a clustering of destinations at this Chua Chu Kang area.
 
-In the code chunk below, the similar test is used to analyse the spatial point patterns of grab trips destinations in Tampines planning area.
+### **CLARK AND EVANS TEST: CHANGI PLANNING AREA**
+
+In the code chunk below, the similar test is used to analyse the spatial point patterns of grab trips destinations in Changi planning area.
 
 ```{r}
-clarkevans.test(grab_trips_tm_ppp,
+clarkevans.test(grab_trips_pg_ppp,
                 correction="none",
                 clipregion=NULL,
                 alternative=c("two.sided"),
                 nsim=999)
 ```
+
+Since R \< 1, it indicates there is a clustering of destinations at this Changi area. There is more clustering of points than Chua Chu Kang area since the R values of Changi area is less than that of Chua Chu Kang area.
 
 ## Network constraint layers
 
@@ -676,13 +690,11 @@ cat("xmax of bounding box for linestring in row ", i, ":", attributes(road_netwo
 cat("ymin of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$ymin, "\n")
 cat("xmin of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$ymax, "\n")
 cat("Does it fall inside owin object of sg:", ifelse(inside, "yes", "no"))
-inside.owin(attributes(road_network$geometry[i])$bbox$xmin, (road_network$geometry[i])$bbox$ymin, sg_owin)
 ```
 
 ```{r}
 i <- 1
 inside.owin(attributes(road_network$geometry[i])$bbox$xmin, (road_network$geometry[i])$bbox$ymin, sg_owin)
-# & attributes(road_network$geometry[i])$bbox$xmax < 104.100274 & attributes(road_network$geometry[i])$bbox$ymin > 1.159704 & attributes(road_network$geometry[i])$bbox$ymax < 1.515345
 ```
 
 Since Singapore falls inside the bounding box of xmin = 103.54, xmax = 104.100274, ymin = 1.159704 and ymax = 1.515345, we will filter our rows to make the dataset of road networks smaller and more manageable. We are using txtProgressBar object to keep track of our progress for assigning rows as within Singapore or not since this process will take around 5 minutes.

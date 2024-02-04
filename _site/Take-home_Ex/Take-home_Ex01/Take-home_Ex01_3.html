@@ -250,7 +250,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#testing-spatial-point-patterns-using-clark-and-evans-test" id="toc-testing-spatial-point-patterns-using-clark-and-evans-test" class="nav-link" data-scroll-target="#testing-spatial-point-patterns-using-clark-and-evans-test"><strong>TESTING SPATIAL POINT PATTERNS USING CLARK AND EVANS TEST</strong></a></li>
   <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a></li>
   <li><a href="#clark-and-evans-test-choa-chu-kang-planning-area" id="toc-clark-and-evans-test-choa-chu-kang-planning-area" class="nav-link" data-scroll-target="#clark-and-evans-test-choa-chu-kang-planning-area"><strong>CLARK AND EVANS TEST: CHOA CHU KANG PLANNING AREA</strong></a></li>
-  <li><a href="#clark-and-evans-test-tampines-planning-area" id="toc-clark-and-evans-test-tampines-planning-area" class="nav-link" data-scroll-target="#clark-and-evans-test-tampines-planning-area"><strong>CLARK AND EVANS TEST: TAMPINES PLANNING AREA</strong></a></li>
+  <li><a href="#clark-and-evans-test-changi-planning-area" id="toc-clark-and-evans-test-changi-planning-area" class="nav-link" data-scroll-target="#clark-and-evans-test-changi-planning-area"><strong>CLARK AND EVANS TEST: CHANGI PLANNING AREA</strong></a></li>
   </ul></li>
   <li><a href="#network-constraint-layers" id="toc-network-constraint-layers" class="nav-link" data-scroll-target="#network-constraint-layers">Network constraint layers</a>
   <ul class="collapse">
@@ -326,6 +326,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Getting Started</h1>
 <section id="data-acquisition" class="level2">
 <h2 class="anchored" data-anchor-id="data-acquisition">Data Acquisition</h2>
+<p>oen</p>
 <table class="table">
 <thead>
 <tr class="header">
@@ -340,11 +341,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>MPSZ-2019 Zonal data of Singapore</td>
-<td>Provided</td>
+<td>Master Plan 2019 Subzone Boundary (No Sea) from Data.gov.sg</td>
 </tr>
 <tr class="odd">
-<td>Coastal Boundary Data of Singapore</td>
-<td>Provided</td>
+<td>Coastal Boundary Data of Singapore (ESRI shapefile format)</td>
+<td>Provided by SLA</td>
 </tr>
 <tr class="even">
 <td>OpenStreetMap Road Network Dataset</td>
@@ -958,7 +959,7 @@ Fraction of frame area: 0.414</code></pre>
 </section>
 <section id="computing-kde-by-using-adaptive-bandwidth" class="level3">
 <h3 class="anchored" data-anchor-id="computing-kde-by-using-adaptive-bandwidth"><strong>COMPUTING KDE BY USING ADAPTIVE BANDWIDTH</strong></h3>
-<p>Fixed bandwidth method is very sensitive to highly skew distribution of spatial point patterns over geographical units for example urban versus rural. One way to overcome this problem is by using adaptive bandwidth instead.</p>
+<p>Fixed bandwidth method is very sensitive to highly skew distribution of spatial point patterns over geographical units for example urban versus rural. One way to overcome this problem is by using adaptive bandwidth instead. However, since in Singapore, it is a small city with fully urban zones, adaptive bandwidth will be unnecessary and fixed bandwidth will be more suitable. However, we will experiment and display both to see the difference.</p>
 <p>In this section, we will derive adaptive kernel density estimation by using <a href="https://rdrr.io/cran/spatstat/man/adaptive.density.html"><em>density.adaptive()</em></a> of <strong>spatstat</strong>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>kde_grabtripssg_adaptive <span class="ot">&lt;-</span> <span class="fu">adaptive.density</span>(grab_trips_ppp_SG.km, <span class="at">method=</span><span class="st">"kernel"</span>)</span>
@@ -999,6 +1000,7 @@ Fraction of frame area: 0.414</code></pre>
 </div>
 </div>
 </div>
+<p>As can be seen above, the highest trip destinations occur in central area and east area near Changi. We may assume many people going to the airport may be rushing there with their large luggages using ride hailing services. Thus, there is a lot of grab trips with their destinations being at Changi airport area.</p>
 <section id="converting-gridded-output-into-raster" class="level4">
 <h4 class="anchored" data-anchor-id="converting-gridded-output-into-raster"><strong>CONVERTING GRIDDED OUTPUT INTO RASTER</strong></h4>
 <p>Next, we will convert the gridded kernal density objects into RasterLayer object by using <em>raster()</em> of <strong>raster</strong> package.</p>
@@ -1031,7 +1033,7 @@ values     : -6.837601e-15, 32.45281  (min, max)</code></pre>
 </section>
 <section id="assigning-projection-systems" class="level4">
 <h4 class="anchored" data-anchor-id="assigning-projection-systems"><strong>ASSIGNING PROJECTION SYSTEMS</strong></h4>
-<p>The code chunk below will be used to include the CRS information on gridded_kde_grabtripsSG_bw RasterLayer.</p>
+<p>The code chunk below will be used to include the CRS information on gridded_kde_grabtripsSG_bw RasterLayer. It has been projected to Singapore’s coordinate system using 3414.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">projection</span>(kde_grabtrips_bw_raster) <span class="ot">&lt;-</span> <span class="fu">CRS</span>(<span class="st">"+init=EPSG:3414"</span>)</span>
 <span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>kde_grabtrips_bw_raster</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1080,23 +1082,191 @@ values     : -6.837601e-15, 32.45281  (min, max)</code></pre>
 <section id="extracting-study-area" class="level4">
 <h4 class="anchored" data-anchor-id="extracting-study-area"><strong>EXTRACTING STUDY AREA</strong></h4>
 <p>The code chunk below will be used to extract the target planning areas.</p>
+<p>Lets view all available zones to zoom it on:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>pg <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"PUNGGOL"</span>,]</span>
-<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>tm <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"TAMPINES"</span>,]</span>
-<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>ck <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"CHOA CHU KANG"</span>,]</span>
-<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>jw <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"JURONG WEST"</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "MARINA SOUTH"            "OUTRAM"                 
+  [3] "SINGAPORE RIVER"         "BUKIT MERAH"            
+  [5] "BUKIT MERAH"             "BUKIT MERAH"            
+  [7] "BUKIT MERAH"             "SINGAPORE RIVER"        
+  [9] "QUEENSTOWN"              "QUEENSTOWN"             
+ [11] "QUEENSTOWN"              "BUKIT MERAH"            
+ [13] "MARINA EAST"             "RIVER VALLEY"           
+ [15] "SINGAPORE RIVER"         "WESTERN ISLANDS"        
+ [17] "WESTERN ISLANDS"         "WESTERN ISLANDS"        
+ [19] "SOUTHERN ISLANDS"        "SOUTHERN ISLANDS"       
+ [21] "BUKIT MERAH"             "DOWNTOWN CORE"          
+ [23] "STRAITS VIEW"            "BUKIT MERAH"            
+ [25] "BUKIT MERAH"             "DOWNTOWN CORE"          
+ [27] "DOWNTOWN CORE"           "BUKIT MERAH"            
+ [29] "BUKIT MERAH"             "QUEENSTOWN"             
+ [31] "DOWNTOWN CORE"           "BUKIT MERAH"            
+ [33] "BUKIT MERAH"             "OUTRAM"                 
+ [35] "BUKIT MERAH"             "OUTRAM"                 
+ [37] "DOWNTOWN CORE"           "DOWNTOWN CORE"          
+ [39] "OUTRAM"                  "BUKIT MERAH"            
+ [41] "DOWNTOWN CORE"           "BUKIT MERAH"            
+ [43] "DOWNTOWN CORE"           "MARINE PARADE"          
+ [45] "DOWNTOWN CORE"           "MUSEUM"                 
+ [47] "RIVER VALLEY"            "DOWNTOWN CORE"          
+ [49] "QUEENSTOWN"              "MARINE PARADE"          
+ [51] "QUEENSTOWN"              "RIVER VALLEY"           
+ [53] "ORCHARD"                 "ROCHOR"                 
+ [55] "RIVER VALLEY"            "QUEENSTOWN"             
+ [57] "MUSEUM"                  "DOWNTOWN CORE"          
+ [59] "ROCHOR"                  "RIVER VALLEY"           
+ [61] "BUKIT MERAH"             "DOWNTOWN CORE"          
+ [63] "BUKIT MERAH"             "QUEENSTOWN"             
+ [65] "ROCHOR"                  "ROCHOR"                 
+ [67] "QUEENSTOWN"              "KALLANG"                
+ [69] "MARINE PARADE"           "QUEENSTOWN"             
+ [71] "QUEENSTOWN"              "TANGLIN"                
+ [73] "NEWTON"                  "CLEMENTI"               
+ [75] "TUAS"                    "NEWTON"                 
+ [77] "BEDOK"                   "CLEMENTI"               
+ [79] "PIONEER"                 "JURONG EAST"            
+ [81] "NEWTON"                  "KALLANG"                
+ [83] "ORCHARD"                 "NEWTON"                 
+ [85] "ROCHOR"                  "PIONEER"                
+ [87] "MUSEUM"                  "BUKIT TIMAH"            
+ [89] "TUAS"                    "TANGLIN"                
+ [91] "CLEMENTI"                "BEDOK"                  
+ [93] "PIONEER"                 "PIONEER"                
+ [95] "TANGLIN"                 "ROCHOR"                 
+ [97] "ROCHOR"                  "ROCHOR"                 
+ [99] "ROCHOR"                  "KALLANG"                
+[101] "QUEENSTOWN"              "ORCHARD"                
+[103] "MARINE PARADE"           "JURONG EAST"            
+[105] "KALLANG"                 "CLEMENTI"               
+[107] "NOVENA"                  "BEDOK"                  
+[109] "KALLANG"                 "NOVENA"                 
+[111] "TUAS"                    "PIONEER"                
+[113] "GEYLANG"                 "JURONG EAST"            
+[115] "BOON LAY"                "BUKIT TIMAH"            
+[117] "BEDOK"                   "MARINE PARADE"          
+[119] "QUEENSTOWN"              "ROCHOR"                 
+[121] "NEWTON"                  "JURONG EAST"            
+[123] "BOON LAY"                "BOON LAY"               
+[125] "QUEENSTOWN"              "KALLANG"                
+[127] "NEWTON"                  "CLEMENTI"               
+[129] "QUEENSTOWN"              "CLEMENTI"               
+[131] "KALLANG"                 "KALLANG"                
+[133] "KALLANG"                 "BUKIT TIMAH"            
+[135] "JURONG EAST"             "BUKIT TIMAH"            
+[137] "GEYLANG"                 "TOA PAYOH"              
+[139] "TOA PAYOH"               "TUAS"                   
+[141] "TOA PAYOH"               "TOA PAYOH"              
+[143] "JURONG WEST"             "JURONG WEST"            
+[145] "TOA PAYOH"               "JURONG WEST"            
+[147] "JURONG EAST"             "TOA PAYOH"              
+[149] "BEDOK"                   "JURONG EAST"            
+[151] "BUKIT BATOK"             "JURONG WEST"            
+[153] "BEDOK"                   "CLEMENTI"               
+[155] "NOVENA"                  "BUKIT TIMAH"            
+[157] "TOA PAYOH"               "JURONG WEST"            
+[159] "TOA PAYOH"               "JURONG EAST"            
+[161] "TOA PAYOH"               "TOA PAYOH"              
+[163] "GEYLANG"                 "TANGLIN"                
+[165] "NOVENA"                  "BOON LAY"               
+[167] "BEDOK"                   "CLEMENTI"               
+[169] "BUKIT TIMAH"             "GEYLANG"                
+[171] "JURONG EAST"             "JURONG WEST"            
+[173] "BUKIT BATOK"             "BUKIT BATOK"            
+[175] "BUKIT BATOK"             "SERANGOON"              
+[177] "JURONG WEST"             "TUAS"                   
+[179] "PAYA LEBAR"              "SERANGOON"              
+[181] "BISHAN"                  "TAMPINES"               
+[183] "BUKIT BATOK"             "HOUGANG"                
+[185] "BUKIT BATOK"             "BISHAN"                 
+[187] "JURONG WEST"             "BUKIT PANJANG"          
+[189] "TAMPINES"                "HOUGANG"                
+[191] "TUAS"                    "JURONG EAST"            
+[193] "JURONG WEST"             "SERANGOON"              
+[195] "NOVENA"                  "CLEMENTI"               
+[197] "GEYLANG"                 "TOA PAYOH"              
+[199] "BEDOK"                   "TOA PAYOH"              
+[201] "PAYA LEBAR"              "HOUGANG"                
+[203] "HOUGANG"                 "HOUGANG"                
+[205] "ANG MO KIO"              "BUKIT PANJANG"          
+[207] "CHOA CHU KANG"           "HOUGANG"                
+[209] "PAYA LEBAR"              "BUKIT PANJANG"          
+[211] "BUKIT TIMAH"             "BUKIT TIMAH"            
+[213] "TAMPINES"                "TAMPINES"               
+[215] "CHOA CHU KANG"           "PASIR RIS"              
+[217] "ANG MO KIO"              "HOUGANG"                
+[219] "CHOA CHU KANG"           "CHOA CHU KANG"          
+[221] "CHANGI"                  "BUKIT PANJANG"          
+[223] "BUKIT PANJANG"           "BUKIT PANJANG"          
+[225] "SERANGOON"               "SENGKANG"               
+[227] "ANG MO KIO"              "ANG MO KIO"             
+[229] "PASIR RIS"               "ANG MO KIO"             
+[231] "HOUGANG"                 "PASIR RIS"              
+[233] "BUKIT BATOK"             "CHANGI BAY"             
+[235] "PAYA LEBAR"              "BISHAN"                 
+[237] "BUKIT BATOK"             "ANG MO KIO"             
+[239] "HOUGANG"                 "ANG MO KIO"             
+[241] "ANG MO KIO"              "SERANGOON"              
+[243] "HOUGANG"                 "PASIR RIS"              
+[245] "BUKIT PANJANG"           "PASIR RIS"              
+[247] "TAMPINES"                "ANG MO KIO"             
+[249] "ANG MO KIO"              "ANG MO KIO"             
+[251] "SERANGOON"               "TENGAH"                 
+[253] "SERANGOON"               "PASIR RIS"              
+[255] "BUKIT BATOK"             "PAYA LEBAR"             
+[257] "SUNGEI KADUT"            "PASIR RIS"              
+[259] "CHOA CHU KANG"           "SENGKANG"               
+[261] "SENGKANG"                "SENGKANG"               
+[263] "PUNGGOL"                 "CHOA CHU KANG"          
+[265] "PASIR RIS"               "PUNGGOL"                
+[267] "PUNGGOL"                 "SUNGEI KADUT"           
+[269] "CHANGI"                  "ANG MO KIO"             
+[271] "CHANGI"                  "SENGKANG"               
+[273] "SENGKANG"                "SENGKANG"               
+[275] "YISHUN"                  "YISHUN"                 
+[277] "PUNGGOL"                 "MANDAI"                 
+[279] "YISHUN"                  "SELETAR"                
+[281] "SUNGEI KADUT"            "WOODLANDS"              
+[283] "WOODLANDS"               "YISHUN"                 
+[285] "WESTERN WATER CATCHMENT" "SELETAR"                
+[287] "YISHUN"                  "WOODLANDS"              
+[289] "SUNGEI KADUT"            "WOODLANDS"              
+[291] "SEMBAWANG"               "WOODLANDS"              
+[293] "SEMBAWANG"               "WOODLANDS"              
+[295] "SIMPANG"                 "SEMBAWANG"              
+[297] "LIM CHU KANG"            "SIMPANG"                
+[299] "SEMBAWANG"               "SEMBAWANG"              
+[301] "SIMPANG"                 "NORTH-EASTERN ISLANDS"  
+[303] "MANDAI"                  "SIMPANG"                
+[305] "YISHUN"                  "WOODLANDS"              
+[307] "WOODLANDS"               "SEMBAWANG"              
+[309] "YISHUN"                  "PUNGGOL"                
+[311] "YISHUN"                  "PUNGGOL"                
+[313] "CENTRAL WATER CATCHMENT" "SELETAR"                
+[315] "SUNGEI KADUT"            "SELETAR"                
+[317] "YISHUN"                  "MANDAI"                 
+[319] "PUNGGOL"                 "WOODLANDS"              
+[321] "SEMBAWANG"               "SEMBAWANG"              
+[323] "SEMBAWANG"              </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>pg <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"CHANGI"</span>,]</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>tm <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"MARINE PARADE"</span>,]</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>ck <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"CHOA CHU KANG"</span>,]</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>jw <span class="ot">=</span> mpsz[mpsz<span class="sc">@</span>data<span class="sc">$</span>PLN_AREA_N <span class="sc">==</span> <span class="st">"JURONG WEST"</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Plotting target planning areas</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
-<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pg, <span class="at">main =</span> <span class="st">"Ponggol"</span>)</span>
-<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tm, <span class="at">main =</span> <span class="st">"Tampines"</span>)</span>
-<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ck, <span class="at">main =</span> <span class="st">"Choa Chu Kang"</span>)</span>
-<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(jw, <span class="at">main =</span> <span class="st">"Jurong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pg, <span class="at">main =</span> <span class="st">"Changi"</span>)</span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tm, <span class="at">main =</span> <span class="st">"Marine Parade"</span>)</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ck, <span class="at">main =</span> <span class="st">"Choa Chu Kang"</span>)</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(jw, <span class="at">main =</span> <span class="st">"Jurong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-50-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-51-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1106,49 +1276,49 @@ values     : -6.837601e-15, 32.45281  (min, max)</code></pre>
 <h4 class="anchored" data-anchor-id="converting-the-spatial-point-data-frame-into-generic-sp-format"><strong>CONVERTING THE SPATIAL POINT DATA FRAME INTO GENERIC SP FORMAT</strong></h4>
 <p>Next, we will convert these SpatialPolygonsDataFrame layers into generic spatialpolygons layers.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>pg_sp <span class="ot">=</span> <span class="fu">as</span>(pg, <span class="st">"SpatialPolygons"</span>)</span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>tm_sp <span class="ot">=</span> <span class="fu">as</span>(tm, <span class="st">"SpatialPolygons"</span>)</span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>ck_sp <span class="ot">=</span> <span class="fu">as</span>(ck, <span class="st">"SpatialPolygons"</span>)</span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>jw_sp <span class="ot">=</span> <span class="fu">as</span>(jw, <span class="st">"SpatialPolygons"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>pg_sp <span class="ot">=</span> <span class="fu">as</span>(pg, <span class="st">"SpatialPolygons"</span>)</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>tm_sp <span class="ot">=</span> <span class="fu">as</span>(tm, <span class="st">"SpatialPolygons"</span>)</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>ck_sp <span class="ot">=</span> <span class="fu">as</span>(ck, <span class="st">"SpatialPolygons"</span>)</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>jw_sp <span class="ot">=</span> <span class="fu">as</span>(jw, <span class="st">"SpatialPolygons"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="creating-owin-object-1" class="level4">
 <h4 class="anchored" data-anchor-id="creating-owin-object-1"><strong>CREATING <em>OWIN</em> OBJECT</strong></h4>
 <p>Now, we will convert these SpatialPolygons objects into owin objects that is required by <strong>spatstat</strong>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>pg_owin <span class="ot">=</span> <span class="fu">as</span>(pg_sp, <span class="st">"owin"</span>)</span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>tm_owin <span class="ot">=</span> <span class="fu">as</span>(tm_sp, <span class="st">"owin"</span>)</span>
-<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>ck_owin <span class="ot">=</span> <span class="fu">as</span>(ck_sp, <span class="st">"owin"</span>)</span>
-<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>jw_owin <span class="ot">=</span> <span class="fu">as</span>(jw_sp, <span class="st">"owin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>pg_owin <span class="ot">=</span> <span class="fu">as</span>(pg_sp, <span class="st">"owin"</span>)</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>tm_owin <span class="ot">=</span> <span class="fu">as</span>(tm_sp, <span class="st">"owin"</span>)</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>ck_owin <span class="ot">=</span> <span class="fu">as</span>(ck_sp, <span class="st">"owin"</span>)</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>jw_owin <span class="ot">=</span> <span class="fu">as</span>(jw_sp, <span class="st">"owin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="combining-grab-trips-points-and-the-study-area" class="level4">
 <h4 class="anchored" data-anchor-id="combining-grab-trips-points-and-the-study-area"><strong>COMBINING Grab Trips POINTS AND THE STUDY AREA</strong></h4>
 <p>By using the code chunk below, we are able to extract grab trips destinations that is within the specific region to do our analysis later on.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>grab_trips_pg_ppp <span class="ot">=</span> grab_trips_ppp[pg_owin]</span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>grab_trips_tm_ppp <span class="ot">=</span> grab_trips_ppp[tm_owin]</span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>grab_trips_ck_ppp <span class="ot">=</span> grab_trips_ppp[ck_owin]</span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>grab_trips_jw_ppp <span class="ot">=</span> grab_trips_ppp[jw_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>grab_trips_pg_ppp <span class="ot">=</span> grab_trips_ppp[pg_owin]</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>grab_trips_tm_ppp <span class="ot">=</span> grab_trips_ppp[tm_owin]</span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>grab_trips_ck_ppp <span class="ot">=</span> grab_trips_ppp[ck_owin]</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>grab_trips_jw_ppp <span class="ot">=</span> grab_trips_ppp[jw_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, <em>rescale()</em> function is used to trasnform the unit of measurement from metre to kilometre.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>grab_trips_pg_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_pg_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>grab_trips_tm_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_tm_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>grab_trips_ck_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_ck_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>grab_tripse_jw_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_jw_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>grab_trips_pg_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_pg_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>grab_trips_tm_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_tm_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>grab_trips_ck_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_ck_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>grab_tripse_jw_ppp.km <span class="ot">=</span> <span class="fu">rescale</span>(grab_trips_jw_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s plot these four study areas and the locations of the grab trip destinations.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
-<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_pg_ppp.km, <span class="at">main=</span><span class="st">"Punggol"</span>)</span>
-<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_tm_ppp.km, <span class="at">main=</span><span class="st">"Tampines"</span>)</span>
-<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_ck_ppp.km, <span class="at">main=</span><span class="st">"Choa Chu Kang"</span>)</span>
-<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_tripse_jw_ppp.km, <span class="at">main=</span><span class="st">"Jurong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_pg_ppp.km, <span class="at">main=</span><span class="st">"Changi"</span>)</span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_tm_ppp.km, <span class="at">main=</span><span class="st">"Marine Parade"</span>)</span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_trips_ck_ppp.km, <span class="at">main=</span><span class="st">"Choa Chu Kang"</span>)</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(grab_tripse_jw_ppp.km, <span class="at">main=</span><span class="st">"Jurong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-55-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1159,31 +1329,31 @@ values     : -6.837601e-15, 32.45281  (min, max)</code></pre>
 <h4 class="anchored" data-anchor-id="computing-kde"><strong>COMPUTING KDE</strong></h4>
 <p>The code chunk below will be used to compute the KDE of these four planning area. <strong><em>bw.diggle</em></strong> method is used to derive the bandwidth of each</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
-<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_pg_ppp.km, </span>
-<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
-<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
-<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
-<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Punggol"</span>)</span>
-<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_tm_ppp.km, </span>
-<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
-<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
-<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
-<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Tempines"</span>)</span>
-<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_ck_ppp.km, </span>
-<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
-<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
-<span id="cb82-15"><a href="#cb82-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
-<span id="cb82-16"><a href="#cb82-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Choa Chu Kang"</span>)</span>
-<span id="cb82-17"><a href="#cb82-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_tripse_jw_ppp.km, </span>
-<span id="cb82-18"><a href="#cb82-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
-<span id="cb82-19"><a href="#cb82-19" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
-<span id="cb82-20"><a href="#cb82-20" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
-<span id="cb82-21"><a href="#cb82-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"JUrong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_pg_ppp.km, </span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Changi"</span>)</span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_tm_ppp.km, </span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Marine Parade"</span>)</span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_trips_ck_ppp.km, </span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Choa Chu Kang"</span>)</span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(grab_tripse_jw_ppp.km, </span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">sigma=</span>bw.diggle, </span>
+<span id="cb84-19"><a href="#cb84-19" aria-hidden="true" tabindex="-1"></a>             <span class="at">edge=</span><span class="cn">TRUE</span>, </span>
+<span id="cb84-20"><a href="#cb84-20" aria-hidden="true" tabindex="-1"></a>             <span class="at">kernel=</span><span class="st">"gaussian"</span>),</span>
+<span id="cb84-21"><a href="#cb84-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"JUrong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1204,11 +1374,11 @@ values     : -6.837601e-15, 32.45281  (min, max)</code></pre>
 <section id="section" class="level3">
 <h3 class="anchored" data-anchor-id="section"></h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_ppp_SG,</span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="st">"sg_owin"</span>,</span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"clustered"</span>),</span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_ppp_SG,</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="st">"sg_owin"</span>,</span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"clustered"</span>),</span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Clark-Evans test
@@ -1225,11 +1395,11 @@ alternative hypothesis: clustered (R &lt; 1)</code></pre>
 <h3 class="anchored" data-anchor-id="clark-and-evans-test-choa-chu-kang-planning-area"><strong>CLARK AND EVANS TEST: CHOA CHU KANG PLANNING AREA</strong></h3>
 <p>In the code chunk below, <a href="https://rdrr.io/cran/spatstat/man/clarkevans.test.html"><em>clarkevans.test()</em></a> of <strong>spatstat</strong> is used to performs Clark-Evans test of aggregation for grab trip destinations in Choa Chu Kang planning area.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_ck_ppp,</span>
-<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
-<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="cn">NULL</span>,</span>
-<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"two.sided"</span>),</span>
-<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_ck_ppp,</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="cn">NULL</span>,</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"two.sided"</span>),</span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Clark-Evans test
@@ -1241,34 +1411,36 @@ R = 0.4768, p-value &lt; 2.2e-16
 alternative hypothesis: two-sided</code></pre>
 </div>
 </div>
+<p>Since R &lt; 1, it indicates there is a clustering of destinations at this Chua Chu Kang area.</p>
 </section>
-<section id="clark-and-evans-test-tampines-planning-area" class="level3">
-<h3 class="anchored" data-anchor-id="clark-and-evans-test-tampines-planning-area"><strong>CLARK AND EVANS TEST: TAMPINES PLANNING AREA</strong></h3>
-<p>In the code chunk below, the similar test is used to analyse the spatial point patterns of grab trips destinations in Tampines planning area.</p>
+<section id="clark-and-evans-test-changi-planning-area" class="level3">
+<h3 class="anchored" data-anchor-id="clark-and-evans-test-changi-planning-area"><strong>CLARK AND EVANS TEST: CHANGI PLANNING AREA</strong></h3>
+<p>In the code chunk below, the similar test is used to analyse the spatial point patterns of grab trips destinations in Changi planning area.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_tm_ppp,</span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
-<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="cn">NULL</span>,</span>
-<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"two.sided"</span>),</span>
-<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clarkevans.test</span>(grab_trips_pg_ppp,</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">correction=</span><span class="st">"none"</span>,</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">clipregion=</span><span class="cn">NULL</span>,</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">alternative=</span><span class="fu">c</span>(<span class="st">"two.sided"</span>),</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Clark-Evans test
     No edge correction
     Z-test
 
-data:  grab_trips_tm_ppp
-R = 0.37791, p-value &lt; 2.2e-16
+data:  grab_trips_pg_ppp
+R = 0.11628, p-value &lt; 2.2e-16
 alternative hypothesis: two-sided</code></pre>
 </div>
 </div>
+<p>Since R &lt; 1, it indicates there is a clustering of destinations at this Changi area. There is more clustering of points than Chua Chu Kang area since the R values of Changi area is less than that of Chua Chu Kang area.</p>
 </section>
 </section>
 <section id="network-constraint-layers" class="level2">
 <h2 class="anchored" data-anchor-id="network-constraint-layers">Network constraint layers</h2>
 <p>What are the different layers available as part of the gis dataset? There is road networks, street networks and many more. Lets add only the road layer with the name ‘gis_osm_roads_free_1’:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>road_network <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/"</span>, <span class="at">layer =</span> <span class="st">"gis_osm_roads_free_1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>road_network <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/"</span>, <span class="at">layer =</span> <span class="st">"gis_osm_roads_free_1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `gis_osm_roads_free_1' from data source 
   `/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/takehomeassigment1/malaysia-singapore-brunei-latest-free' 
@@ -1281,8 +1453,8 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># typeof(road_network)  #&lt;-- list type</span></span>
-<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>road_network</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="co"># typeof(road_network)  #&lt;-- list type</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>road_network</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 1766969 features and 10 fields
 Geometry type: LINESTRING
@@ -1317,31 +1489,27 @@ First 10 features:
 <p>The Projected CRS for the road_network above is SVY21 / Singapore TM due to the st_transform method we applied earlier when importing the data.</p>
 <p>Let us analyse a linestring’s bounding box:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">900</span></span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>inside <span class="ot">&lt;-</span> <span class="fu">inside.owin</span>(<span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin, (road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin, sg_owin)</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">900</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>inside <span class="ot">&lt;-</span> <span class="fu">inside.owin</span>(<span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin, (road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin, sg_owin)</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>xmin of bounding box for linestring in row  900 : 102.8441 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmax of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmax, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmax of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmax, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>xmax of bounding box for linestring in row  900 : 102.8445 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ymin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ymin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>ymin of bounding box for linestring in row  900 : 2.490684 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymax, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"xmin of bounding box for linestring in row "</span>, i, <span class="st">":"</span>, <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymax, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>xmin of bounding box for linestring in row  900 : 2.491354 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Does it fall inside owin object of sg:"</span>, <span class="fu">ifelse</span>(inside, <span class="st">"yes"</span>, <span class="st">"no"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Does it fall inside owin object of sg:"</span>, <span class="fu">ifelse</span>(inside, <span class="st">"yes"</span>, <span class="st">"no"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Does it fall inside owin object of sg: </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inside.owin</span>(<span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin, (road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin, sg_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>logical(0)</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -1350,28 +1518,27 @@ First 10 features:
 <div class="cell-output cell-output-stdout">
 <pre><code>logical(0)</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &amp; attributes(road_network$geometry[i])$bbox$xmax &lt; 104.100274 &amp; attributes(road_network$geometry[i])$bbox$ymin &gt; 1.159704 &amp; attributes(road_network$geometry[i])$bbox$ymax &lt; 1.515345</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Since Singapore falls inside the bounding box of xmin = 103.54, xmax = 104.100274, ymin = 1.159704 and ymax = 1.515345, we will filter our rows to make the dataset of road networks smaller and more manageable. We are using txtProgressBar object to keep track of our progress for assigning rows as within Singapore or not since this process will take around 5 minutes.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>pct_circ <span class="ot">&lt;-</span> <span class="fu">list</span>()  <span class="do">## create an empty list to store values</span></span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>n_iter <span class="ot">=</span> <span class="fu">nrow</span>(road_network)</span>
-<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initializes the progress bar</span></span>
-<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>pb <span class="ot">&lt;-</span> <span class="fu">txtProgressBar</span>(<span class="at">min =</span> <span class="dv">0</span>,      <span class="co"># Minimum value of the progress bar</span></span>
-<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">max =</span> n_iter, <span class="co"># Maximum value of the progress bar</span></span>
-<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">style =</span> <span class="dv">3</span>,    <span class="co"># Progress bar style (also available style = 1 and style = 2)</span></span>
-<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">width =</span> <span class="dv">50</span>,   <span class="co"># Progress bar width. Defaults to getOption("width")</span></span>
-<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">char =</span> <span class="st">"="</span>)   <span class="co"># Character used to create the bar</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>pct_circ <span class="ot">&lt;-</span> <span class="fu">list</span>()  <span class="do">## create an empty list to store values</span></span>
+<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>n_iter <span class="ot">=</span> <span class="fu">nrow</span>(road_network)</span>
+<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initializes the progress bar</span></span>
+<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a>pb <span class="ot">&lt;-</span> <span class="fu">txtProgressBar</span>(<span class="at">min =</span> <span class="dv">0</span>,      <span class="co"># Minimum value of the progress bar</span></span>
+<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">max =</span> n_iter, <span class="co"># Maximum value of the progress bar</span></span>
+<span id="cb107-6"><a href="#cb107-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">style =</span> <span class="dv">3</span>,    <span class="co"># Progress bar style (also available style = 1 and style = 2)</span></span>
+<span id="cb107-7"><a href="#cb107-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">width =</span> <span class="dv">50</span>,   <span class="co"># Progress bar width. Defaults to getOption("width")</span></span>
+<span id="cb107-8"><a href="#cb107-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">char =</span> <span class="st">"="</span>)   <span class="co"># Character used to create the bar</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
   |                                                        
   |                                                  |   0%</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(road_network)) { <span class="co"># loop over each row</span></span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>  pct_circ[i] <span class="ot">&lt;-</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin <span class="sc">&gt;</span> <span class="fl">103.54</span>     <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmax <span class="sc">&lt;</span> <span class="fl">104.100274</span> <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin <span class="sc">&gt;</span> <span class="fl">1.159704</span> <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymax <span class="sc">&lt;</span> <span class="fl">1.515345</span></span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
-<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>} <span class="co"># End for loop</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(road_network)) { <span class="co"># loop over each row</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>  pct_circ[i] <span class="ot">&lt;-</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmin <span class="sc">&gt;</span> <span class="fl">103.54</span>     <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>xmax <span class="sc">&lt;</span> <span class="fl">104.100274</span> <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymin <span class="sc">&gt;</span> <span class="fl">1.159704</span> <span class="sc">&amp;</span> <span class="fu">attributes</span>(road_network<span class="sc">$</span>geometry[i])<span class="sc">$</span>bbox<span class="sc">$</span>ymax <span class="sc">&lt;</span> <span class="fl">1.515345</span></span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>} <span class="co"># End for loop</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
   |                                                        
@@ -1677,10 +1844,10 @@ First 10 features:
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co">#rbind(Orange,m)</span></span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">unlist</span>(pct_circ), <span class="at">nrow =</span> <span class="fu">length</span>(pct_circ))</span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>df3 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(road_network, m) </span>
-<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>df3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co">#rbind(Orange,m)</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">unlist</span>(pct_circ), <span class="at">nrow =</span> <span class="fu">length</span>(pct_circ))</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>df3 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(road_network, m) </span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>df3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 1766969 features and 11 fields
 Geometry type: LINESTRING
@@ -1713,8 +1880,8 @@ First 10 features:
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks <span class="ot">&lt;-</span> <span class="fu">filter</span>(df3, m <span class="sc">==</span> <span class="cn">TRUE</span>)</span>
-<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>( <span class="st">"Percentage of dataset we are dealing with now"</span>, (<span class="fu">dim</span>(filtered_road_networks)[<span class="dv">1</span>] <span class="sc">/</span> <span class="fu">dim</span>(road_network)[<span class="dv">1</span>]) <span class="sc">*</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks <span class="ot">&lt;-</span> <span class="fu">filter</span>(df3, m <span class="sc">==</span> <span class="cn">TRUE</span>)</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>( <span class="st">"Percentage of dataset we are dealing with now"</span>, (<span class="fu">dim</span>(filtered_road_networks)[<span class="dv">1</span>] <span class="sc">/</span> <span class="fu">dim</span>(road_network)[<span class="dv">1</span>]) <span class="sc">*</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Percentage of dataset we are dealing with now 15.67917</code></pre>
 </div>
@@ -1722,11 +1889,11 @@ First 10 features:
 <p>We are only dealing with 15.7% of the original road network dataset that lies in and near Singapore.</p>
 <p>We need to project this geospatial lines data to Singapore’s coordinate system with crs = 3414.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(filtered_road_networks, <span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(filtered_road_networks, <span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>road_network_sp_lines <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(filtered_road_networks<span class="sc">$</span>geometry)</span>
-<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>road_network_sp_lines</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>road_network_sp_lines <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(filtered_road_networks<span class="sc">$</span>geometry)</span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>road_network_sp_lines</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>class       : SpatialLines 
 features    : 277046 
@@ -1735,20 +1902,20 @@ crs         : +proj=tmerc +lat_0=1.36666666666667 +lon_0=103.833333333333 +k=1 +
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(road_network_sp_lines)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(road_network_sp_lines)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-69-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-70-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb120"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>lixels <span class="ot">&lt;-</span> <span class="fu">lixelize_lines.mc</span>(filtered_road_networks, </span>
-<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">700</span>, </span>
-<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">mindist =</span> <span class="dv">350</span>)</span>
-<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>lixels</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>lixels <span class="ot">&lt;-</span> <span class="fu">lixelize_lines.mc</span>(filtered_road_networks, </span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">700</span>, </span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">mindist =</span> <span class="dv">350</span>)</span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a>lixels</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 278508 features and 12 fields
 Geometry type: LINESTRING
@@ -1785,15 +1952,15 @@ First 10 features:
 <h3 class="anchored" data-anchor-id="generating-line-centre-points"><strong>7.6.2 GENERATING LINE CENTRE POINTS</strong></h3>
 <p>Next, <em>lines_center()</em> of <strong>spNetwork</strong> will be used to generate a SpatialPointsDataFrame (i.e.&nbsp;samples) with line centre points as shown in the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">lines_center</span>(lixels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">lines_center</span>(lixels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The points are located at center of the line based on the length of the line.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>trip_endings_df <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(destination_df, </span>
-<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"rawlng"</span>, <span class="st">"rawlat"</span>),</span>
-<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3414</span>)</span>
-<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(trip_endings_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>trip_endings_df <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(destination_df, </span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"rawlng"</span>, <span class="st">"rawlat"</span>),</span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3414</span>)</span>
+<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(trip_endings_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 28,000
 Columns: 11
@@ -1812,7 +1979,7 @@ $ geometry      &lt;POINT [m]&gt; POINT (22837.7 46850), POINT (43956.34 35640.3
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>filtered_road_networks[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 100 features and 11 fields
 Geometry type: LINESTRING
@@ -1845,7 +2012,7 @@ First 10 features:
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 100 features and 10 fields
 Geometry type: POINT
@@ -1875,46 +2042,46 @@ Projected CRS: SVY21 / Singapore TM
 <h3 class="anchored" data-anchor-id="performing-netkde"><strong>7.6.3 PERFORMING NETKDE</strong></h3>
 <p>We are ready to computer the NetKDE by using the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a>densities <span class="ot">&lt;-</span> <span class="fu">nkde</span>(filtered_road_networks[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,], </span>
-<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">events =</span> trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,],</span>
-<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">w =</span> <span class="fu">rep</span>(<span class="dv">1</span>,<span class="fu">nrow</span>(trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,])),</span>
-<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">samples =</span> samples,</span>
-<span id="cb129-5"><a href="#cb129-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">kernel_name =</span> <span class="st">"quartic"</span>,</span>
-<span id="cb129-6"><a href="#cb129-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">bw =</span> <span class="dv">300</span>, </span>
-<span id="cb129-7"><a href="#cb129-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">div=</span> <span class="st">"bw"</span>, </span>
-<span id="cb129-8"><a href="#cb129-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"simple"</span>, </span>
-<span id="cb129-9"><a href="#cb129-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">digits =</span> <span class="dv">1</span>, </span>
-<span id="cb129-10"><a href="#cb129-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">tol =</span> <span class="dv">1</span>,</span>
-<span id="cb129-11"><a href="#cb129-11" aria-hidden="true" tabindex="-1"></a>                  <span class="at">grid_shape =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>), </span>
-<span id="cb129-12"><a href="#cb129-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">max_depth =</span> <span class="dv">8</span>,</span>
-<span id="cb129-13"><a href="#cb129-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">agg =</span> <span class="dv">5</span>, <span class="co">#we aggregate events within a 5m radius (faster calculation)</span></span>
-<span id="cb129-14"><a href="#cb129-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">sparse =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb129-15"><a href="#cb129-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a>densities <span class="ot">&lt;-</span> <span class="fu">nkde</span>(filtered_road_networks[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,], </span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">events =</span> trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,],</span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">w =</span> <span class="fu">rep</span>(<span class="dv">1</span>,<span class="fu">nrow</span>(trip_endings_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>,])),</span>
+<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">samples =</span> samples,</span>
+<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">kernel_name =</span> <span class="st">"quartic"</span>,</span>
+<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">bw =</span> <span class="dv">300</span>, </span>
+<span id="cb128-7"><a href="#cb128-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">div=</span> <span class="st">"bw"</span>, </span>
+<span id="cb128-8"><a href="#cb128-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"simple"</span>, </span>
+<span id="cb128-9"><a href="#cb128-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">digits =</span> <span class="dv">1</span>, </span>
+<span id="cb128-10"><a href="#cb128-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">tol =</span> <span class="dv">1</span>,</span>
+<span id="cb128-11"><a href="#cb128-11" aria-hidden="true" tabindex="-1"></a>                  <span class="at">grid_shape =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>), </span>
+<span id="cb128-12"><a href="#cb128-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">max_depth =</span> <span class="dv">8</span>,</span>
+<span id="cb128-13"><a href="#cb128-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">agg =</span> <span class="dv">5</span>, <span class="co">#we aggregate events within a 5m radius (faster calculation)</span></span>
+<span id="cb128-14"><a href="#cb128-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">sparse =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb128-15"><a href="#cb128-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="visualising-netkde" class="level4">
 <h4 class="anchored" data-anchor-id="visualising-netkde"><strong>7.6.3.1 VISUALISING NETKDE</strong></h4>
 <p>Before we can visualise the NetKDE values, code chunk below will be used to insert the computed density values (i.e.&nbsp;densities) into <em>samples</em> and <em>lixels</em> objects as <em>density</em> field.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a>samples<span class="sc">$</span>density <span class="ot">&lt;-</span> densities</span>
-<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>lixels<span class="sc">$</span>density <span class="ot">&lt;-</span> densities</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a>samples<span class="sc">$</span>density <span class="ot">&lt;-</span> densities</span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>lixels<span class="sc">$</span>density <span class="ot">&lt;-</span> densities</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Since svy21 projection system is in meter, the computed density values are very small i.e.&nbsp;0.0000005. The code chunk below is used to resale the density values from number of events per meter to number of events per kilometer.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rescaling to help the mapping</span></span>
-<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>samples<span class="sc">$</span>density <span class="ot">&lt;-</span> samples<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span>
-<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>lixels<span class="sc">$</span>density <span class="ot">&lt;-</span> lixels<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rescaling to help the mapping</span></span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>samples<span class="sc">$</span>density <span class="ot">&lt;-</span> samples<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>lixels<span class="sc">$</span>density <span class="ot">&lt;-</span> lixels<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The code below uses appropriate functions of tmap package to prepare interactive and high cartographic quality map visualisation.</p>
 <p>Due to javascript heap memory error when rendering this component it has been comment. Do uncomment it for full results.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_mode('view')</span></span>
-<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(lixels)+</span></span>
-<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#tm_lines(col="density")+</span></span>
-<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(trip_endings_df[1:1000,])+</span></span>
-<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#tm_dots()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_mode('view')</span></span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(lixels)+</span></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#tm_lines(col="density")+</span></span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(trip_endings_df[1:1000,])+</span></span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#tm_dots()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
