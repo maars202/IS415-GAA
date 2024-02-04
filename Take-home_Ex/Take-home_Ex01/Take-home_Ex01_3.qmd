@@ -6,27 +6,60 @@ execute:
 date: 01/22/2024
 ---
 
+# Overview
+
+## Setting the Scene
+
+Human mobility, the movement of human beings in space and time, reflects the spatial-temporal characteristics of human behavior. With the advancement Information and Communication Technologies (ICT) especially smart phone, a large volume of data related to human mobility have been collected. By using appropriate GIS analysis methods, these data are potentially useful in supporting smart city planning and management.
+
+In Singapore, one of the important source of data related to human mobility is from [Land Transport Authority (LTA) DataMall](https://datamall.lta.gov.sg/content/datamall/en.html). Two data sets related to human mobility are provided by the portal, they are: Passenger Volume by Origin Destination Train Stations and Passenger Volume by Origin Destination Bus Stops. One of the limitation of these data sets is that their location are biased to either bus stops or MRT/LRT stations. In 2020, another very interesting human mobility data set called [Grab Posisi](https://engineering.grab.com/grab-posisi) was released by GRAB, one of the largest shared taxi operator in South-east Asia. There are two data sets been released and one of them is for Singapore.
+
+Grab is one of the most frequently used services in Singapore, with ride hailing services to ordering food to be delivered via Grab. In this assignment we will be looking at Grab's ride hailing services by looking at the end destinations of users taking trips and see its distribution across Singapore and specifically Singapore's roads. This will be useful in identifying congestion rates and much more at these roads.
+
+## Objectives
+
+Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, you are tasked to apply appropriate spatial point patterns analysis methods to discover the geographical and spatio-temporal distribution of Grab hailing services locations in Singapore.
+
+## **The Task**
+
 The specific tasks of this take-home exercise are as follows:
 
--   Using appropriate function of **sf** and **tidyverse**, preparing the following geospatial data layer in sf tibble data.frames:
+Using appropriate function of **sf** and **tidyverse**, preparing the following geospatial data layer in sf tibble data.frames:
 
-    -   Grab taxi location points either by origins or destinations.
+-   Grab taxi location points either by origins or destinations.
 
-    -   Road layer within Singapore excluding outer islands.
+-   Road layer within Singapore excluding outer islands.
 
-    -   Singapore boundary layer excluding outer islands
+-   Singapore boundary layer excluding outer islands
 
--   Using the extracted data, derive traditional Kernel Density Estimation layers.
+Using the extracted data, derive traditional Kernel Density Estimation layers.
 
--   Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
+Using the extracted data, derive either Network Kernel Density Estimation (NKDE) or Temporal Network Kernel Density Estimation (TNKDE)
 
--   Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
+Using appropriate **tmap** functions, display the kernel density layers on openstreetmap of Singapore.
 
--   Describe the spatial patterns revealed by the kernel density maps.
+Describe the spatial patterns revealed by the kernel density maps
+
+# Getting Started
+
+## Data Acquisition
+
+| Dataset Name                       | Source                                                       |
+|---------------------------|---------------------------------------------|
+| Grab Posisi Dataset                | <https://engineering.grab.com/grab-posisi>                   |
+| MPSZ-2019 Zonal data of Singapore  | Provided                                                     |
+| Coastal Boundary Data of Singapore | Provided                                                     |
+| OpenStreetMap Road Network Dataset | [Geofabrik download server](https://download.geofabrik.de/). |
+
+## **Installing and Loading Packages**
+
+Lets install the relevant R libraries needed using pacman.
 
 ```{r}
 pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep)
 ```
+
+# **Importing and Preparing Grab Aspatial Data**
 
 Reading the grab aspatial data:
 
@@ -34,6 +67,8 @@ Reading the grab aspatial data:
 df <- read_parquet("../../data/GrabPosisi/part-00000.parquet")
 df
 ```
+
+Next we need to find the starting or ending points of trips which can be done by grouping the trips by their trip_id and sorting the entries by their timestamp. Naturally, the entry of a trip_id with the earlier timestamp will be when the user boarded the car and the latest timestamp entry will reveal the destinations. First we need ton convert the timestamps to datetime format for efficient sorting.
 
 ```{r}
 df$pingtimestamp <- as_datetime(df$pingtimestamp)
@@ -68,9 +103,15 @@ destination_df <- df %>%
 destination_df
 ```
 
+Lets preview the destination_df:
+
 ```{r}
 head(destination_df)
 ```
+
+# **Importing and Preparing Geospatial Data**
+
+We need to retrieve the coastal outline of Singapore so that we are able to fetch the grab trips specifically within these boundaries.
 
 ```{r}
 sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
@@ -79,9 +120,8 @@ sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
 ```{r}
 mpsz_sf <- st_read(dsn = "../../data/geospatial", 
                 layer = "MP14_SUBZONE_WEB_PL")
+#mpsz_sf <- st_read(dsn = "../../data/takehomeassigment1/MPSZ-2019", layer = "MPSZ-2019")
 ```
-
-### 
 
 ### **MAPPING THE GEOSPATIAL DATA SETS**
 
@@ -94,6 +134,8 @@ plot(sg_sf)
 ```{r}
 plot(mpsz_sf)
 ```
+
+We need to extract the geospatial data present in the aspatial dataset in the columns "rawlng" and "rawlat" and transform it to fit Singapore's Coordinate system using crs = 3414.
 
 ```{r}
 trips_sf <- st_as_sf(destination_df, 
@@ -325,7 +367,9 @@ plot(kde_grab_trips_SG.bw, main = "bw.diggle")
 plot(kde_grab_trips_SG.ppl, main = "bw.ppl")
 ```
 
-WORKING WITH DIFFERENT KERNEL METHODSBy default, the kernel method used in density.ppp() is gaussian. But there are three other options, namely: Epanechnikov, Quartic and Dics.The code chunk below will be used to compute three more kernel density estimations by using these three kernel function.
+### WORKING WITH DIFFERENT KERNEL METHODS
+
+By default, the kernel method used in density.ppp() is gaussian. But there are three other options, namely: Epanechnikov, Quartic and Dics.The code chunk below will be used to compute three more kernel density estimations by using these three kernel function.
 
 ```{r}
 
@@ -449,6 +493,8 @@ tm_shape(kde_grabtrips_bw_raster) +
   tm_raster("v") +
   tm_layout(legend.position = c("right", "bottom"), frame = FALSE)
 ```
+
+Clearly, the number of trips to changi airport region is clearly in the 2000 - 2500 range. This gives a very skewed distribution for this range in certain parts of the map.
 
 ### **COMPARING SPATIAL POINT PATTERNS USING KDE**
 
@@ -607,7 +653,7 @@ clarkevans.test(grab_trips_tm_ppp,
 
 ## Network constraint layers
 
-What are the different layers available as part of the gis dataset? Lets add only the road layer with the name 'gis_osm_roads_free_1':
+What are the different layers available as part of the gis dataset? There is road networks, street networks and many more. Lets add only the road layer with the name 'gis_osm_roads_free_1':
 
 ```{r}
 road_network <- st_read(dsn = "../../data/takehomeassigment1/malaysia-singapore-brunei-latest-free/", layer = "gis_osm_roads_free_1")
@@ -619,3 +665,160 @@ road_network
 ```
 
 The Projected CRS for the road_network above is SVY21 / Singapore TM due to the st_transform method we applied earlier when importing the data.
+
+Let us analyse a linestring's bounding box:
+
+```{r}
+i <- 900
+inside <- inside.owin(attributes(road_network$geometry[i])$bbox$xmin, (road_network$geometry[i])$bbox$ymin, sg_owin)
+cat("xmin of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$xmin, "\n")
+cat("xmax of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$xmax, "\n")
+cat("ymin of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$ymin, "\n")
+cat("xmin of bounding box for linestring in row ", i, ":", attributes(road_network$geometry[i])$bbox$ymax, "\n")
+cat("Does it fall inside owin object of sg:", ifelse(inside, "yes", "no"))
+inside.owin(attributes(road_network$geometry[i])$bbox$xmin, (road_network$geometry[i])$bbox$ymin, sg_owin)
+```
+
+```{r}
+i <- 1
+inside.owin(attributes(road_network$geometry[i])$bbox$xmin, (road_network$geometry[i])$bbox$ymin, sg_owin)
+# & attributes(road_network$geometry[i])$bbox$xmax < 104.100274 & attributes(road_network$geometry[i])$bbox$ymin > 1.159704 & attributes(road_network$geometry[i])$bbox$ymax < 1.515345
+```
+
+Since Singapore falls inside the bounding box of xmin = 103.54, xmax = 104.100274, ymin = 1.159704 and ymax = 1.515345, we will filter our rows to make the dataset of road networks smaller and more manageable. We are using txtProgressBar object to keep track of our progress for assigning rows as within Singapore or not since this process will take around 5 minutes.
+
+```{r}
+pct_circ <- list()  ## create an empty list to store values
+n_iter = nrow(road_network)
+# Initializes the progress bar
+pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                     max = n_iter, # Maximum value of the progress bar
+                     style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                     width = 50,   # Progress bar width. Defaults to getOption("width")
+                     char = "=")   # Character used to create the bar
+
+for(i in 1:nrow(road_network)) { # loop over each row
+  pct_circ[i] <- attributes(road_network$geometry[i])$bbox$xmin > 103.54	 & attributes(road_network$geometry[i])$bbox$xmax < 104.100274 & attributes(road_network$geometry[i])$bbox$ymin > 1.159704 & attributes(road_network$geometry[i])$bbox$ymax < 1.515345
+  setTxtProgressBar(pb,i)
+  
+} # End for loop
+```
+
+```{r}
+#rbind(Orange,m)
+m <- matrix(unlist(pct_circ), nrow = length(pct_circ))
+df3 <- cbind(road_network, m) 
+df3
+```
+
+```{r}
+filtered_road_networks <- filter(df3, m == TRUE)
+cat( "Percentage of dataset we are dealing with now", (dim(filtered_road_networks)[1] / dim(road_network)[1]) * 100)
+```
+
+We are only dealing with 15.7% of the original road network dataset that lies in and near Singapore.
+
+We need to project this geospatial lines data to Singapore's coordinate system with crs = 3414.
+
+```{r}
+filtered_road_networks <- st_transform(filtered_road_networks, crs = 3414)
+```
+
+```{r}
+road_network_sp_lines <- as_Spatial(filtered_road_networks$geometry)
+road_network_sp_lines
+```
+
+```{r}
+plot(road_network_sp_lines)
+```
+
+```{r}
+lixels <- lixelize_lines.mc(filtered_road_networks, 
+                         700, 
+                         mindist = 350)
+lixels
+```
+
+Using multicore support for this function as there are alot of roads that need to be cut into specified minimal distance.
+
+### **7.6.2 GENERATING LINE CENTRE POINTS**
+
+Next, *lines_center()* of **spNetwork** will be used to generate a SpatialPointsDataFrame (i.e. samples) with line centre points as shown in the code chunk below.
+
+```{r}
+samples <- lines_center(lixels)
+```
+
+The points are located at center of the line based on the length of the line.
+
+```{r}
+trip_endings_df <- st_as_sf(destination_df, 
+                       coords = c("rawlng", "rawlat"),
+                       crs=4326) %>%
+st_transform(crs = 3414)
+glimpse(trip_endings_df)
+```
+
+```{r}
+filtered_road_networks[1:100,]
+```
+
+```{r}
+trip_endings_df[1:100,]
+```
+
+### **7.6.3 PERFORMING NETKDE**
+
+We are ready to computer the NetKDE by using the code chunk below.
+
+```{r}
+densities <- nkde(filtered_road_networks[1:1000,], 
+                  events = trip_endings_df[1:1000,],
+                  w = rep(1,nrow(trip_endings_df[1:1000,])),
+                  samples = samples,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  div= "bw", 
+                  method = "simple", 
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, #we aggregate events within a 5m radius (faster calculation)
+                  sparse = TRUE,
+                  verbose = FALSE)
+```
+
+#### **7.6.3.1 VISUALISING NETKDE**
+
+Before we can visualise the NetKDE values, code chunk below will be used to insert the computed density values (i.e. densities) into *samples* and *lixels* objects as *density* field.
+
+```{r}
+samples$density <- densities
+lixels$density <- densities
+```
+
+Since svy21 projection system is in meter, the computed density values are very small i.e. 0.0000005. The code chunk below is used to resale the density values from number of events per meter to number of events per kilometer.
+
+```{r}
+# rescaling to help the mapping
+samples$density <- samples$density*1000
+lixels$density <- lixels$density*1000
+```
+
+The code below uses appropriate functions of tmap package to prepare interactive and high cartographic quality map visualisation.
+
+Due to javascript heap memory error when rendering this component it has been comment. Do uncomment it for full results.
+
+```{r}
+#tmap_mode('view')
+#tm_shape(lixels)+
+  #tm_lines(col="density")+
+#tm_shape(trip_endings_df[1:1000,])+
+  #tm_dots()
+```
+
+```{r}
+tmap_mode('plot')
+```
