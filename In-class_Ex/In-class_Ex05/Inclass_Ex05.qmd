@@ -1,0 +1,129 @@
+---
+title: "In Class Exercise 5"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/29/2024
+date-modified: "`r Sys.Date()`"
+highlight-style: dark
+format:
+  html:
+    code-copy: true
+---
+
+# In Class Exercise 5
+
+## Getting Started
+
+## Installation
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, sfdep)
+```
+
+Spdep is much better than sfdep due to some additional functions added to spdep afterwards.
+
+## Importing Dataset
+
+| Dataset                           | Source |
+|-----------------------------------|--------|
+| Hunan_2012.csv (aspatial dataset) |        |
+| Hunan_2012.csv (aspatial dataset) |        |
+|                                   |        |
+
+```{r}
+hunan <- st_read(dsn = "../../data/geospatial", 
+                 layer = "Hunan")
+
+hunan2012 <- read_csv("../../data/aspatial/Hunan_2012.csv", show_col_types = FALSE)
+```
+
+Warning: Coordinate pair such as 108.7831,... is in decimal degree which means its WGS84 coordinate system as well.
+
+Analysing by Unique Values by City in hunan2012!:
+
+Analysing by Unique Values by City in hunan:
+
+## Pre-processing 
+
+```{r}
+#hunan_GDPPC <- left_join(hunan, hunan2012) %>%
+#select (1:4, 7, 15)
+```
+
+## Plotting
+
+```{r}
+tmap_mode("plot") #<- static version
+#tmap_mode("view") #<- interactive version
+#tm_shape(hunan_GDPPC + 
+#           tm_fill("GDPPC", style = "quantile",
+#                    palette = "Blues",
+#                    title = "GDPPC") + 
+#         tm_layout(main.title = "Distribution of GDP per capita by county, Hunan Province",
+#                   main.title.position = "center",
+#                   main.title.size = 1.2,
+#                   main.title.height = 0.45,
+#                   main.title.width = 0.35,
+#                   frame = TRUE)
+    
+```
+
+# 
+
+## Analysis
+
+### Step 1
+
+```{r}
+#wm_q <- hunan_GDPPC %>%
+#mutate(nb = st_contiguity(geometry),
+#wt = st_weights(nb, style = "W"), .before = 1)
+```
+
+-   mutate is equivalent to pd.compute
+
+-   Combining polynb() and nb2llists() from hands on exercise in the above code chunk. The above format is the more advanced improved version
+
+### Step 2 - Computing Global Moran'I
+
+```{r}
+#moranI <- global_moran_test(wm_q$GDPPC,
+#wm_q$nb,
+#wm_q$wt)
+#glimpse(moranI)
+```
+
+### Step 3 - Performing Global Moran'I permutation test
+
+```{r}
+#set.seed(1234)
+
+#global_moran_perm(wm_q$GDPPC,
+#wm_q$nb,
+#wm_q$wt, 
+#nsim = 99)
+```
+
+nsim = 99 because it is running 100 times simulations since the index for running the loop starts from 0.
+
+The report shows the p = value is smaller than alpha value of 0.05. Thus there is enough statistical evidence to reject the null hypothesis that the spatial distribution of GPD per capita are resembling random distribution (Independence from spatial). Because the Moran;s statistics is greater than 0. We can infer that spatial distribution shows signs of clustering.
+
+## Quarto HTML basics Recap
+
+\`\`\`{mermaid}
+flowchart LR
+A\[Hard edge\] --\> B(Round edge)
+B --\> C{Decision}
+C --\> D\[Result one\]
+C --\> E\[Result two\]
+\`\`\`
+
+:::{.callout-note}
+Note that there are five types of callouts, including:
+\`note\`, \`tip\`, \`warning\`, \`caution\`, and \`important\`.
+:::
+
+References:
+
+-   <https://quarto.org/docs/authoring/markdown-basics.html>
