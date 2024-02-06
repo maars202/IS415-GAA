@@ -71,6 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
@@ -212,6 +213,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#in-class-exercise-5" id="toc-in-class-exercise-5" class="nav-link active" data-scroll-target="#in-class-exercise-5">In Class Exercise 5</a>
   <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting Started</a></li>
   <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#importing-dataset" id="toc-importing-dataset" class="nav-link" data-scroll-target="#importing-dataset">Importing Dataset</a></li>
@@ -226,10 +228,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#step-2---computing-global-morani" id="toc-step-2---computing-global-morani" class="nav-link" data-scroll-target="#step-2---computing-global-morani">Step 2 - Computing Global Moran’I</a></li>
   <li><a href="#step-3---performing-global-morani-permutation-test" id="toc-step-3---performing-global-morani-permutation-test" class="nav-link" data-scroll-target="#step-3---performing-global-morani-permutation-test">Step 3 - Performing Global Moran’I permutation test</a></li>
   </ul></li>
-  <li><a href="#quarto-html-basics-recap" id="toc-quarto-html-basics-recap" class="nav-link" data-scroll-target="#quarto-html-basics-recap">Quarto HTML basics Recap</a></li>
+  </ul></li>
+  <li><a href="#quarto-html-basics-recap" id="toc-quarto-html-basics-recap" class="nav-link" data-scroll-target="#quarto-html-basics-recap">Quarto HTML basics Recap</a>
+  <ul class="collapse">
+  <li><a href="#creating-flow-charts" id="toc-creating-flow-charts" class="nav-link" data-scroll-target="#creating-flow-charts">Creating flow charts</a></li>
+  <li><a href="#creating-reflection-notes" id="toc-creating-reflection-notes" class="nav-link" data-scroll-target="#creating-reflection-notes">Creating reflection notes</a></li>
   </ul></li>
   </ul>
-</nav>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="Inclass_Ex05.md"><i class="bi bi-file-code"></i>Github (GFM)</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -260,7 +266,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">February 5, 2024</p>
+      <p class="date-modified">February 6, 2024</p>
     </div>
   </div>
     
@@ -273,6 +279,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="in-class-exercise-5" class="level1">
 <h1>In Class Exercise 5</h1>
+<section id="overview" class="level3">
+<h3 class="anchored" data-anchor-id="overview">Overview</h3>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<p><img src="Inclass_Ex05_files/figure-html/mermaid-figure-1.png" style="width:9.87in;height:2.54in" class="figure-img"></p>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
 <section id="getting-started" class="level2">
 <h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
 </section>
@@ -298,7 +318,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 </tr>
 <tr class="even">
-<td>Hunan_2012.csv (aspatial dataset)</td>
+<td>Hunan_2012.csv (Geospatial dataset)</td>
 <td></td>
 </tr>
 <tr class="odd">
@@ -308,11 +328,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/geospatial"</span>, </span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/geospatial/week5"</span>, </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">layer =</span> <span class="st">"Hunan"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `Hunan' from data source 
-  `/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/geospatial' 
+  `/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/geospatial/week5' 
   using driver `ESRI Shapefile'
 Simple feature collection with 88 features and 7 fields
 Geometry type: POLYGON
@@ -320,7 +340,7 @@ Dimension:     XY
 Bounding box:  xmin: 108.7831 ymin: 24.6342 xmax: 114.2544 ymax: 30.12812
 Geodetic CRS:  WGS 84</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hunan2012 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../../data/aspatial/Hunan_2012.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hunan2012 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../../data/aspatial/week5/Hunan_2012.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Warning: Coordinate pair such as 108.7831,… is in decimal degree which means its WGS84 coordinate system as well.</p>
 <p>Analysing by Unique Values by City in hunan2012!:</p>
@@ -329,8 +349,8 @@ Geodetic CRS:  WGS 84</code></pre>
 <section id="pre-processing" class="level2">
 <h2 class="anchored" data-anchor-id="pre-processing">Pre-processing</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan_GDPPC &lt;- left_join(hunan, hunan2012) %&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#select (1:4, 7, 15)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hunan_GDPPC <span class="ot">&lt;-</span> <span class="fu">left_join</span>(hunan, hunan2012) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">select</span> (<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">7</span>, <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="plotting" class="level2">
@@ -358,9 +378,9 @@ Geodetic CRS:  WGS 84</code></pre>
 <section id="step-1" class="level3">
 <h3 class="anchored" data-anchor-id="step-1">Step 1</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q &lt;- hunan_GDPPC %&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#mutate(nb = st_contiguity(geometry),</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#wt = st_weights(nb, style = "W"), .before = 1)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> hunan_GDPPC <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">nb =</span> <span class="fu">st_contiguity</span>(geometry),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">wt =</span> <span class="fu">st_weights</span>(nb, <span class="at">style =</span> <span class="st">"W"</span>), <span class="at">.before =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <ul>
 <li><p>mutate is equivalent to pd.compute</p></li>
@@ -370,29 +390,84 @@ Geodetic CRS:  WGS 84</code></pre>
 <section id="step-2---computing-global-morani" class="level3">
 <h3 class="anchored" data-anchor-id="step-2---computing-global-morani">Step 2 - Computing Global Moran’I</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#moranI &lt;- global_moran_test(wm_q$GDPPC,</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q$nb,</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q$wt)</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#glimpse(moranI)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>moranI <span class="ot">&lt;-</span> <span class="fu">global_moran_test</span>(wm_q<span class="sc">$</span>GDPPC,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>wm_q<span class="sc">$</span>nb,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>wm_q<span class="sc">$</span>wt)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(moranI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>List of 6
+ $ statistic  : Named num 4.74
+  ..- attr(*, "names")= chr "Moran I statistic standard deviate"
+ $ p.value    : num 1.09e-06
+ $ estimate   : Named num [1:3] 0.30075 -0.01149 0.00435
+  ..- attr(*, "names")= chr [1:3] "Moran I statistic" "Expectation" "Variance"
+ $ alternative: chr "greater"
+ $ method     : chr "Moran I test under randomisation"
+ $ data.name  : chr "x  \nweights: listw    \n"
+ - attr(*, "class")= chr [1:2] "htest" "list"</code></pre>
+</div>
 </div>
 </section>
 <section id="step-3---performing-global-morani-permutation-test" class="level3">
 <h3 class="anchored" data-anchor-id="step-3---performing-global-morani-permutation-test">Step 3 - Performing Global Moran’I permutation test</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#set.seed(1234)</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#global_moran_perm(wm_q$GDPPC,</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q$nb,</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q$wt, </span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#nsim = 99)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">global_moran_perm</span>(wm_q<span class="sc">$</span>GDPPC,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>wm_q<span class="sc">$</span>nb,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>wm_q<span class="sc">$</span>wt, </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">nsim =</span> <span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Monte-Carlo simulation of Moran I
+
+data:  x 
+weights: listw  
+number of simulations + 1: 100 
+
+statistic = 0.30075, observed rank = 100, p-value &lt; 2.2e-16
+alternative hypothesis: two.sided</code></pre>
 </div>
-<p>nsim = 99 because it is running 100 times simulations since the index for running the loop starts from 0.</p>
-<p>The report shows the p = value is smaller than alpha value of 0.05. Thus there is enough statistical evidence to reject the null hypothesis that the spatial distribution of GPD per capita are resembling random distribution (Independence from spatial). Because the Moran;s statistics is greater than 0. We can infer that spatial distribution shows signs of clustering.</p>
+</div>
+<ul>
+<li>nsim = 99 because it is running 100 times simulations since the index for running the loop starts from 0.</li>
+</ul>
+<p>The report shows the p-value is smaller than alpha value of 0.05. Thus there is enough statistical evidence to reject the null hypothesis that the spatial distribution of GPD per capita are resembling random distribution (Independence from spatial). Because the Moran;s statistics is greater than 0. We can infer that spatial distribution shows signs of clustering.</p>
 </section>
 </section>
-<section id="quarto-html-basics-recap" class="level2">
-<h2 class="anchored" data-anchor-id="quarto-html-basics-recap">Quarto HTML basics Recap</h2>
-<p>```{mermaid} flowchart LR A[Hard edge] –&gt; B(Round edge) B –&gt; C{Decision} C –&gt; D[Result one] C –&gt; E[Result two] ```</p>
+</section>
+<section id="quarto-html-basics-recap" class="level1">
+<h1>Quarto HTML basics Recap</h1>
+<section id="creating-flow-charts" class="level2">
+<h2 class="anchored" data-anchor-id="creating-flow-charts">Creating flow charts</h2>
+<div class="cell" data-layout-align="default">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>flowchart LR</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  A[Importing &amp; Loading Dataset] ---&gt; B(Preprocessing)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  B ---&gt; C{Truncate data}</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  C --&gt; D[Less Time]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  C --&gt; E[More Time]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<p><img src="Inclass_Ex05_files/figure-html/mermaid-figure-2.png" style="width:8.71in;height:1.71in" class="figure-img"></p>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<ol type="1">
+<li><p>Importing and Loading Dataset</p></li>
+<li><p>Preprocessing for business use case</p></li>
+<li><p>Truncate data - for Singapore road network</p>
+<ol type="1">
+<li><p>Less Time for lixelisation (few lines to cut)</p></li>
+<li><p>More Time but might exclude some critical road datapoints</p></li>
+</ol></li>
+</ol>
+</section>
+<section id="creating-reflection-notes" class="level2">
+<h2 class="anchored" data-anchor-id="creating-reflection-notes">Creating reflection notes</h2>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -409,6 +484,7 @@ Note
 <p>References:</p>
 <ul>
 <li><a href="https://quarto.org/docs/authoring/markdown-basics.html" class="uri">https://quarto.org/docs/authoring/markdown-basics.html</a></li>
+<li><a href="https://quarto.org/docs/authoring/diagrams.html#chrome-install" class="uri">https://quarto.org/docs/authoring/diagrams.html#chrome-install</a></li>
 </ul>
 
 
