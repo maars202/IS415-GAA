@@ -5,13 +5,24 @@ execute:
   warning: false
 date: 01/29/2024
 date-modified: "`r Sys.Date()`"
-highlight-style: dark
 format:
   html:
     code-copy: true
+    mermaid-format: png
+  gfm:
+    mermaid-format: png
 ---
 
 # In Class Exercise 5
+
+### Overview
+
+```{mermaid}
+flowchart LR
+  A[Importing & Loading Dataset] ---> B(Preprocessing)
+  B ---> C(Plotting)
+  C ---> D{Analysis w Global Moran'I}
+```
 
 ## Getting Started
 
@@ -25,17 +36,17 @@ Spdep is much better than sfdep due to some additional functions added to spdep 
 
 ## Importing Dataset
 
-| Dataset                           | Source |
-|-----------------------------------|--------|
-| Hunan_2012.csv (aspatial dataset) |        |
-| Hunan_2012.csv (aspatial dataset) |        |
-|                                   |        |
+| Dataset                             | Source |
+|-------------------------------------|--------|
+| Hunan_2012.csv (aspatial dataset)   |        |
+| Hunan_2012.csv (Geospatial dataset) |        |
+|                                     |        |
 
 ```{r}
-hunan <- st_read(dsn = "../../data/geospatial", 
+hunan <- st_read(dsn = "../../data/geospatial/week5", 
                  layer = "Hunan")
 
-hunan2012 <- read_csv("../../data/aspatial/Hunan_2012.csv", show_col_types = FALSE)
+hunan2012 <- read_csv("../../data/aspatial/week5/Hunan_2012.csv", show_col_types = FALSE)
 ```
 
 Warning: Coordinate pair such as 108.7831,... is in decimal degree which means its WGS84 coordinate system as well.
@@ -44,11 +55,11 @@ Analysing by Unique Values by City in hunan2012!:
 
 Analysing by Unique Values by City in hunan:
 
-## Pre-processing 
+## Pre-processing
 
 ```{r}
-#hunan_GDPPC <- left_join(hunan, hunan2012) %>%
-#select (1:4, 7, 15)
+hunan_GDPPC <- left_join(hunan, hunan2012) %>%
+select (1:4, 7, 15)
 ```
 
 ## Plotting
@@ -76,9 +87,9 @@ tmap_mode("plot") #<- static version
 ### Step 1
 
 ```{r}
-#wm_q <- hunan_GDPPC %>%
-#mutate(nb = st_contiguity(geometry),
-#wt = st_weights(nb, style = "W"), .before = 1)
+wm_q <- hunan_GDPPC %>%
+mutate(nb = st_contiguity(geometry),
+wt = st_weights(nb, style = "W"), .before = 1)
 ```
 
 -   mutate is equivalent to pd.compute
@@ -88,42 +99,57 @@ tmap_mode("plot") #<- static version
 ### Step 2 - Computing Global Moran'I
 
 ```{r}
-#moranI <- global_moran_test(wm_q$GDPPC,
-#wm_q$nb,
-#wm_q$wt)
-#glimpse(moranI)
+moranI <- global_moran_test(wm_q$GDPPC,
+wm_q$nb,
+wm_q$wt)
+glimpse(moranI)
 ```
 
 ### Step 3 - Performing Global Moran'I permutation test
 
 ```{r}
-#set.seed(1234)
+set.seed(1234)
 
-#global_moran_perm(wm_q$GDPPC,
-#wm_q$nb,
-#wm_q$wt, 
-#nsim = 99)
+global_moran_perm(wm_q$GDPPC,
+wm_q$nb,
+wm_q$wt, 
+nsim = 99)
 ```
 
-nsim = 99 because it is running 100 times simulations since the index for running the loop starts from 0.
+-   nsim = 99 because it is running 100 times simulations since the index for running the loop starts from 0.
 
-The report shows the p = value is smaller than alpha value of 0.05. Thus there is enough statistical evidence to reject the null hypothesis that the spatial distribution of GPD per capita are resembling random distribution (Independence from spatial). Because the Moran;s statistics is greater than 0. We can infer that spatial distribution shows signs of clustering.
+The report shows the p-value is smaller than alpha value of 0.05. Thus there is enough statistical evidence to reject the null hypothesis that the spatial distribution of GPD per capita are resembling random distribution (Independence from spatial). Because the Moran;s statistics is greater than 0. We can infer that spatial distribution shows signs of clustering.
 
-## Quarto HTML basics Recap
+# Quarto HTML basics Recap
 
-\`\`\`{mermaid}
+## Creating flow charts 
+
+```{mermaid}
+%%| echo: true
 flowchart LR
-A\[Hard edge\] --\> B(Round edge)
-B --\> C{Decision}
-C --\> D\[Result one\]
-C --\> E\[Result two\]
-\`\`\`
+  A[Importing & Loading Dataset] ---> B(Preprocessing)
+  B ---> C{Truncate data}
+  C --> D[Less Time]
+  C --> E[More Time]
+```
 
-:::{.callout-note}
-Note that there are five types of callouts, including:
-\`note\`, \`tip\`, \`warning\`, \`caution\`, and \`important\`.
+1.  Importing and Loading Dataset
+
+2.  Preprocessing for business use case
+
+3.  Truncate data - for Singapore road network
+
+    1.  Less Time for lixelisation (few lines to cut)
+
+    2.  More Time but might exclude some critical road datapoints
+
+## Creating reflection notes 
+
+::: callout-note
+Note that there are five types of callouts, including: \`note\`, \`tip\`, \`warning\`, \`caution\`, and \`important\`.
 :::
 
 References:
 
 -   <https://quarto.org/docs/authoring/markdown-basics.html>
+-   <https://quarto.org/docs/authoring/diagrams.html#chrome-install>

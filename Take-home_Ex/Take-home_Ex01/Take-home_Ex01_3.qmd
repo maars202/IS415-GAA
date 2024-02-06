@@ -44,10 +44,8 @@ Describe the spatial patterns revealed by the kernel density maps
 
 ## Data Acquisition
 
-oen
-
 | Dataset Name                                               | Source                                                       |
-|---------------------------|---------------------------------------------|
+|------------------------------------------------------------|--------------------------------------------------------------|
 | Grab Posisi Dataset                                        | <https://engineering.grab.com/grab-posisi>                   |
 | MPSZ-2019 Zonal data of Singapore                          | Master Plan 2019 Subzone Boundary (No Sea) from Data.gov.sg  |
 | Coastal Boundary Data of Singapore (ESRI shapefile format) | Provided by SLA                                              |
@@ -120,8 +118,7 @@ sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
 ```
 
 ```{r}
-mpsz_sf <- st_read(dsn = "../../data/geospatial", 
-                layer = "MP14_SUBZONE_WEB_PL")
+mpsz_sf <- st_read(dsn = "../../data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 #mpsz_sf <- st_read(dsn = "../../data/takehomeassigment1/MPSZ-2019", layer = "MPSZ-2019")
 ```
 
@@ -161,9 +158,9 @@ Alternatively, we can also prepare a pin map by using the code chunk below.
 Plotting the grab taxi data:
 
 ```{r}
-#tmap_mode('view')
-#tm_shape(trips_sf_geometry)+
- # tm_dots()
+tmap_mode('view')
+tm_shape(trips_sf_geometry)+
+ tm_dots()
 ```
 
 ## **GEOSPATIAL DATA WRANGLING**
@@ -238,7 +235,7 @@ We can check the duplication in a ***ppp*** object by using the code chunk below
 any(duplicated(grab_trips_ppp))
 ```
 
-Thus there are no duplicate data.
+Thus there are no duplicate data. So, we will not need to use methods to deal with duplicate data such as deleting of duplicate data, jittering and make each point “unique”.
 
 ### **CREATING *OWIN* OBJECT**
 
@@ -834,3 +831,9 @@ Due to javascript heap memory error when rendering this component it has been co
 ```{r}
 tmap_mode('plot')
 ```
+
+# References
+
+-   <https://r4gdsa.netlify.app/chap04.html>
+
+-   <https://r4gdsa.netlify.app/chap07.html>
