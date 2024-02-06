@@ -262,6 +262,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#performing-netkde" id="toc-performing-netkde" class="nav-link" data-scroll-target="#performing-netkde"><strong>7.6.3 PERFORMING NETKDE</strong></a></li>
   </ul></li>
   </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
     </div>
@@ -330,7 +331,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Getting Started</h1>
 <section id="data-acquisition" class="level2">
 <h2 class="anchored" data-anchor-id="data-acquisition">Data Acquisition</h2>
-<p>oen</p>
 <table class="table">
 <thead>
 <tr class="header">
@@ -548,9 +548,17 @@ First 5 geometries:</code></pre>
 <p>Alternatively, we can also prepare a pin map by using the code chunk below.</p>
 <p>Plotting the grab taxi data:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_mode('view')</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(trips_sf_geometry)+</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># tm_dots()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#using 'plot' as 'view' does not render on html page</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(trips_sf_geometry)<span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_3_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
 </div>
 </section>
 <section id="geospatial-data-wrangling" class="level2">
@@ -673,7 +681,7 @@ Window area = 1118810000 square units</code></pre>
 <pre><code>[1] FALSE</code></pre>
 </div>
 </div>
-<p>Thus there are no duplicate data.</p>
+<p>Thus there are no duplicate data. So, we will not need to use methods to deal with duplicate data such as deleting of duplicate data, jittering and make each point “unique”.</p>
 </section>
 <section id="creating-owin-object" class="level3">
 <h3 class="anchored" data-anchor-id="creating-owin-object"><strong>CREATING <em>OWIN</em> OBJECT</strong></h3>
@@ -2086,11 +2094,18 @@ Projected CRS: SVY21 / Singapore TM
 <div class="cell">
 <div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+</section>
+</section>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<ul>
+<li><p><a href="https://r4gdsa.netlify.app/chap04.html" class="uri">https://r4gdsa.netlify.app/chap04.html</a></p></li>
+<li><p><a href="https://r4gdsa.netlify.app/chap07.html" class="uri">https://r4gdsa.netlify.app/chap07.html</a></p></li>
+</ul>
 
 
-</section>
-</section>
-</section>
 </section>
 
 </main> <!-- /main -->

@@ -45,7 +45,7 @@ Describe the spatial patterns revealed by the kernel density maps
 ## Data Acquisition
 
 | Dataset Name                                               | Source                                                       |
-|------------------------------------------------------------|--------------------------------------------------------------|
+|-----------------------------------|-------------------------------------|
 | Grab Posisi Dataset                                        | <https://engineering.grab.com/grab-posisi>                   |
 | MPSZ-2019 Zonal data of Singapore                          | Master Plan 2019 Subzone Boundary (No Sea) from Data.gov.sg  |
 | Coastal Boundary Data of Singapore (ESRI shapefile format) | Provided by SLA                                              |
@@ -158,7 +158,8 @@ Alternatively, we can also prepare a pin map by using the code chunk below.
 Plotting the grab taxi data:
 
 ```{r}
-tmap_mode('view')
+#using 'plot' as 'view' does not render on html page
+tmap_mode('plot')
 tm_shape(trips_sf_geometry)+
  tm_dots()
 ```
