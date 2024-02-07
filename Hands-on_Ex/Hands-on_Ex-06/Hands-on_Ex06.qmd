@@ -1,0 +1,221 @@
+---
+title: "Hands-on Exercise 6"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/30/2024
+date-modified: "`r Sys.Date()`"
+---
+
+# Additional Notes
+
+# Plotting GGPLOT2 Plots
+
+Install ggplot2 using pacman:
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, ggplot2)
+```
+
+```{r}
+data()
+```
+
+```{r}
+data(iris)
+```
+
+```{r}
+dim(iris)
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length))+geom_point()
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species, shape=Species))+geom_point()
+```
+
+## Identifying trends using geom_smooth()
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species))+geom_point() +geom_smooth()
+```
+
+```{r}
+#| eval: FALSE
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species)) +geom_point(color = "blue") + geom_smooth(color = "red")
+```
+
+coord_flip() can be used to pivot the whole chart - some charts may be easier to look this way: Good for finding count of unique values in a column and seeing any trends! Do a group by column and count(\*) to get the counts of each unique value of that column....
+
+```{r}
+ggplot(mtcars, aes(x = gear)) +geom_bar()+coord_flip()
+```
+
+# Plotly R Charts
+
+## Animation
+
+```{r}
+library(plotly)
+
+quakes = read.csv('https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv')
+
+fig <- quakes 
+fig <- fig %>%
+  plot_ly(
+    type = 'densitymapbox',
+    lat = ~Latitude,
+    lon = ~Longitude,
+    coloraxis = 'coloraxis',
+    radius = 10) 
+fig <- fig %>%
+  layout(
+    mapbox = list(
+      style="stamen-terrain",
+      center= list(lon=180)), coloraxis = list(colorscale = "Viridis"))
+
+fig
+
+```
+
+Global trend
+
+```{r}
+df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/globe_contours.csv')
+df$id <- seq_len(nrow(df))
+
+library(tidyr)
+d <- df %>%
+  gather(key, value, -id) %>%
+  separate(key, c("l", "line"), "\\.") %>%
+  spread(l, value)
+
+geo <- list(
+  showland = TRUE,
+  showlakes = TRUE,
+  showcountries = TRUE,
+  showocean = TRUE,
+  countrywidth = 0.5,
+  landcolor = toRGB("grey90"),
+  lakecolor = toRGB("white"),
+  oceancolor = toRGB("white"),
+  projection = list(
+    type = 'orthographic',
+    rotation = list(
+      lon = -100,
+      lat = 40,
+      roll = 0
+    )
+  ),
+  lonaxis = list(
+    showgrid = TRUE,
+    gridcolor = toRGB("gray40"),
+    gridwidth = 0.5
+  ),
+  lataxis = list(
+    showgrid = TRUE,
+    gridcolor = toRGB("gray40"),
+    gridwidth = 0.5
+  )
+)
+
+fig <- plot_geo(d)
+fig <- fig %>% group_by(line)
+fig <- fig %>% add_lines(x = ~lon, y = ~lat)
+fig <- fig %>% layout(
+    showlegend = FALSE, geo = geo,
+    title = 'Contour lines over globe<br>(Click and drag to rotate)'
+  )
+
+fig
+
+```
+
+```{r}
+library(plotly)
+df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+df$q <- with(df, cut(pop, quantile(pop)))
+levels(df$q) <- paste(c("1st", "2nd", "3rd", "4th", "5th"), "Quantile")
+df$q <- as.ordered(df$q)
+
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showland = TRUE,
+  landcolor = toRGB("gray85"),
+  subunitwidth = 1,
+  countrywidth = 1,
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white")
+)
+
+fig <- plot_geo(df, locationmode = 'USA-states', sizes = c(1, 250))
+fig <- fig %>% add_markers(
+    x = ~lon, y = ~lat, size = ~pop, color = ~q, hoverinfo = "text",
+    text = ~paste(df$name, "<br />", df$pop/1e6, " million")
+  )
+fig <- fig %>% layout(title = '2014 US city populations<br>(Click legend to toggle)', geo = g)
+
+fig
+
+```
+
+## 3D Plots
+
+### Kernel Density Plot
+
+```{r}
+kd <- with(MASS::geyser, MASS::kde2d(duration, waiting, n = 50))
+fig <- plot_ly(x = kd$x, y = kd$y, z = kd$z) %>% add_surface()
+
+fig
+
+```
+
+Maybe can use in spatial correlation where the factor is the 3rd dimension (first and second are latitude and longitude respectively)
+
+## HELICOPTER MESH -COOL
+
+```{r}
+#| eval: false
+library(plotly)
+library(geomorph)
+
+dest <- "data/chopper.ply"
+mesh <- read.ply(dest)
+# see getS3method("shade3d", "mesh3d") for details on how to plot
+
+# plot point cloud
+x <- mesh$vb["xpts",]
+y <- mesh$vb["ypts",]
+z <- mesh$vb["zpts",]
+m <- matrix(c(x,y,z), ncol=3, dimnames=list(NULL,c("x","y","z")))
+
+# now figure out the colormap
+zmean <- apply(t(mesh$it),MARGIN=1,function(row){mean(m[row,3])})
+
+library(scales)
+facecolor = colour_ramp(
+  brewer_pal(palette="RdBu")(9)
+)(rescale(x=zmean))
+
+fig <- plot_ly(
+  x = x, y = y, z = z,
+  i = mesh$it[1,]-1, j = mesh$it[2,]-1, k = mesh$it[3,]-1,
+  facecolor = facecolor,
+  type = "mesh3d"
+)
+
+fig
+
+```
+
+### References
+
+-   <https://images.datacamp.com/image/upload/v1666806657/Marketing/Blog/ggplot2_cheat_sheet.pdf>
+
+-   <https://plotly.com/r/>
