@@ -1,0 +1,194 @@
+---
+title: "Take Home Exercise 2"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 02/09/2024
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
+# Overview
+
+## Setting the Scene
+
+Dengue Hemorrhagic Fever (in short dengue fever) is one of the most widespread mosquito-borne diseases in the most tropical and subtropical regions.
+It is an acute disease caused by dengue virus infection which is transmitted by female Aedes aegypti and Aedes albopictus mosquitoes.
+In 2015, Taiwan had recorded the most severe dengue fever outbreak with more than 43,000 dengue cases and 228 deaths.
+Since then, the annual reported dengue fever cases were maintained at the level of not more than 200 cases.
+However, in 2023, Taiwan recorded 26703 dengue fever cases.
+Figure below reveals that more than 25,000 cases were reported at Tainan City.
+
+Figure 2 and 3 below reveal that more than 80% of the reported dengue fever cases occurred in the month August-November 2023 and epidemiology week 31-50.
+
+## Objectives
+
+As a curious geospatial analytics green horn, you are interested to discover:
+
+if the distribution of dengue fever outbreak at Tainan City, Taiwan are independent from space and space and time.
+If the outbreak is indeed spatial and spatio-temporal dependent, then, you would like to detect where are the clusters and outliers, and the emerging hot spot/cold spot areas.
+
+## The Task
+
+The specific tasks of this take-home exercise are as follows:
+
+Using appropriate function of sf and tidyverse, preparing the following geospatial data layer: a study area layer in sf polygon features.
+It must be at village level and confined to the D01, D02, D04, D06, D07, D08, D32 and D39 counties of Tainan City, Taiwan.
+a dengue fever layer within the study area in sf point features.
+The dengue fever cases should be confined to epidemiology week 31-50, 2023.
+a derived dengue fever layer in spacetime s3 class of sfdep.
+It should contain, among many other useful information, a data field showing number of dengue fever cases by village and by epidemiology week.
+Using the extracted data, perform global spatial autocorrelation analysis.
+Using the extracted data, perform local spatial autocorrelation analysis.
+Using the extracted data, perform emerging hotspot analysis.
+Describe the spatial patterns revealed by the analysis above.
+
+## The Data
+
+For the purpose of this take-home exercise, two data sets are provided, they are:
+
+TAIWAN_VILLAGE_2020, a geospatial data of village boundary of Taiwan.
+It is in ESRI shapefile format.
+The data is in Taiwan Geographic Coordinate System.
+(Source: Historical map data of the village boundary: TWD97 longitude and latitude)
+
+Dengue_Daily.csv, an aspatial data of reported dengue cases in Taiwan since 1998.
+(Source: Dengue Daily Confirmed Cases Since 1998. Below are selected fields that are useful for this study:
+
+發病日: Onset date 最小統計區中心點X: x-coordinate 最小統計區中心點Y: y-coordinate Both data sets have been uploaded on eLearn.
+Students are required to download them from eLearn.
+
+# Getting Started
+
+## Data Acquisition
+
+|                                |                                                                           |
+|--------------------------------|---------------------------------------------------------------------------|
+| [**Dataset Name**]{.underline} | [**Source**]{.underline}                                                  |
+| TAIWAN_VILLAGE_2020            | Historical map data of the village boundary: TWD97 longitude and latitude |
+| Dengue_Daily.csv               | Dengue Daily Confirmed Cases Since 1998                                   |
+
+## Installing and Loading Packages
+
+Lets install the relevant R libraries needed using pacman.
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr)
+```
+
+### Setting Important Configurations
+
+```{r}
+folderToSave <- "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/rds"
+```
+
+```{r}
+currentdirec = list.files(path="../../data/takehomeassigment2/geospatial", pattern=NULL, all.files=FALSE, 
+    full.names=FALSE)
+currentdirec
+```
+
+Reading the grab aspatial data:
+
+```{r}
+dengue_df <- read_csv("../../data/takehomeassigment2/aspatial/Dengue_Daily.csv")
+dengue_df
+```
+
+Getting Columns of dengue_df:
+
+```{r}
+names(dengue_df)
+```
+
+Lets print a summary of dengue_df to find the data distribution and other info:
+
+```{r}
+summary(dengue_df[])
+```
+
+We need to retrieve the coastal outline of Taiwan village so that we are able to fetch the dengue infections specifically within these boundaries.
+
+```{r}
+taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE")
+taiwan_sf
+```
+
+```{r}
+plot(taiwan_sf)
+```
+
+According to <https://epsg.io/3826>, the EPSG code for taiwan to be used as the coordinate system is 3826.
+Thus, the data has been projected to Taiwan's coordinate system using 3826.
+
+```{r}
+# find location of missing values
+print("Position of missing values ")
+which(is.na(dengue_df))
+ 
+# count total missing values 
+print("Count of total missing values  ")
+sum(is.na(dengue_df))
+
+
+colSums(is.na(dengue_df))
+```
+
+```{r}
+dengue_df[6,]$最小統計區中心點X
+```
+
+```{r}
+dengue_df_filtered <- filter(dengue_df, 最小統計區中心點X != "None" & 最小統計區中心點Y != "None")
+dengue_df_filtered
+```
+
+```{r}
+dengue_df_filtered <- st_as_sf(dengue_df_filtered, 
+                       coords = c("最小統計區中心點X","最小統計區中心點Y"),
+                       crs=3826) %>%
+st_transform(crs = 3826)
+glimpse(dengue_df_filtered)
+```
+
+```{r}
+nrow(dengue_df_filtered[1:100,])
+```
+
+```{r}
+tmap_mode('view')
+tm_shape(dengue_df_filtered[1:100,])+
+ tm_dots()
+```
+
+Let us save this combined dataframe to RDS so that we will not need to repeat the above steps.
+Replace filepath with the directory you would like to save the rds at.
+
+```{r}
+
+filepath <- str_interp("${folderToSave}/dengue_df")
+write_rds(dengue_df_filtered, filepath) 
+```
+
+Continue from here for subsequent steps:
+
+```{r}
+filepath <- str_interp("${folderToSave}/dengue_df")
+dengue_df <- read_rds(filepath, refhook = NULL)
+dengue_df 
+```
+
+# Analysis
+
+```{r}
+filepath <- str_interp("${folderToSave}/dengue_df")
+dengue_df <- read_rds(filepath, refhook = NULL)
+dengue_df 
+```
+
+# References
+
+-   <https://r4gdsa.netlify.app/chap04.html>
+
+-   <https://r4gdsa.netlify.app/chap07.html>
