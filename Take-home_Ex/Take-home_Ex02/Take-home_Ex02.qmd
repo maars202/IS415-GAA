@@ -64,7 +64,7 @@ Students are required to download them from eLearn.
 ## Data Acquisition
 
 |                                |                                                                           |
-|--------------------------------|---------------------------------------------------------------------------|
+|----------------------|--------------------------------------------------|
 | [**Dataset Name**]{.underline} | [**Source**]{.underline}                                                  |
 | TAIWAN_VILLAGE_2020            | Historical map data of the village boundary: TWD97 longitude and latitude |
 | Dengue_Daily.csv               | Dengue Daily Confirmed Cases Since 1998                                   |
@@ -185,6 +185,48 @@ dengue_df
 filepath <- str_interp("${folderToSave}/dengue_df")
 dengue_df <- read_rds(filepath, refhook = NULL)
 dengue_df 
+```
+
+Columns in dengue_df:
+
+```{r}
+names(dengue_df)
+```
+
+## Data distribution for columns
+
+::: {.panel-tabset}
+
+#### Age
+
+```{r}
+#| eval: false
+g <- ggplot(dengue_df_2, aes(年齡層))  
+p <-  g + geom_bar() + ggtitle("Count of Entries by Age") +  xlab("Age") + ylab("Count")
+
+ggplotly(p) 
+```
+
+#### **感染縣市**
+
+```{r}
+#| eval: false
+g <- ggplot(dengue_df, aes(感染縣市))  
+p <-  g + geom_bar() + ggtitle("Count of Entries by 感染縣市") +  xlab("感染縣市") + ylab("Count")
+
+ggplotly(p) 
+
+
+ggplotly(p)
+
+```
+
+\
+:::
+
+```{r}
+dengue_df_2 <- dengue_df[order(dengue_df$年齡層, decreasing = TRUE),]
+dengue_df_2
 ```
 
 # References
