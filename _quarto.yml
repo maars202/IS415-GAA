@@ -33,6 +33,12 @@ website:
           href: "Take-home_Ex/Take-home_Ex01/Take-home_Ex01_3.html"
         - text: "Take-home Exercise 2"
           href: "Take-home_Ex/Take-home_Ex02/Take-home_Ex02.html"
+    - text: "Shiny Apps"
+      menu:
+        - text: "Demo"
+          href: "https://geospatialanalytics21.shinyapps.io/demo/"
+        - text: "Project"
+          href: "null"
     right:
       - href: index.qmd
         text: Home

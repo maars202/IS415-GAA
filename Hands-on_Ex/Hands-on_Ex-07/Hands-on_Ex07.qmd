@@ -1,0 +1,255 @@
+---
+title: "Hands-on Exercise 7"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 01/30/2024
+date-modified: "`r Sys.Date()`"
+---
+
+## **5.1 Overview**
+
+Spatial Point Pattern Analysis is the evaluation of the pattern or distribution, of a set of points on a surface. The point can be location of:
+
+-   events such as crime, traffic accident and disease onset, or
+
+-   business services (coffee and fastfood outlets) or facilities such as childcare and eldercare.
+
+Using appropriate functions of [spatstat](https://cran.r-project.org/web/packages/spatstat/), this hands-on exercise aims to discover the spatial point processes of childecare centres in Singapore.
+
+The specific questions we would like to answer are as follows:
+
+-   are the childcare centres in Singapore randomly distributed throughout the country?
+
+-   if the answer is not, then the next logical question is where are the locations with higher concentration of childcare centres?
+
+## **5.2 The data**
+
+To provide answers to the questions above, three data sets will be used. They are:
+
+-   `CHILDCARE`, a point feature data providing both location and attribute information of childcare centres. It was downloaded from Data.gov.sg and is in geojson format.
+
+-   `MP14_SUBZONE_WEB_PL`, a polygon feature data providing information of URA 2014 Master Plan Planning Subzone boundary data. It is in ESRI shapefile format. This data set was also downloaded from Data.gov.sg.
+
+-   `CostalOutline`, a polygon feature data showing the national boundary of Singapore. It is provided by SLA and is in ESRI shapefile format.
+
+## **5.3 Installing and Loading the R packages**
+
+In this hands-on exercise, five R packages will be used, they are:
+
+-   [**sf**](https://r-spatial.github.io/sf/), a relatively new R package specially designed to import, manage and process vector-based geospatial data in R.
+
+-   [**spatstat**](https://spatstat.org/), which has a wide range of useful functions for point pattern analysis. In this hands-on exercise, it will be used to perform 1st- and 2nd-order spatial point patterns analysis and derive kernel density estimation (KDE) layer.
+
+-   [**raster**](https://cran.r-project.org/web/packages/raster/) which reads, writes, manipulates, analyses and model of gridded spatial data (i.e. raster). In this hands-on exercise, it will be used to convert image output generate by spatstat into raster format.
+
+-   [**maptools**](https://cran.r-project.org/web/packages/maptools/) which provides a set of tools for manipulating geographic data. In this hands-on exercise, we mainly use it to convert *Spatial* objects into *ppp* format of **spatstat**.
+
+-   [**tmap**](https://cran.r-project.org/web/packages/tmap/) which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using [leaflet](https://leafletjs.com/) API.
+
+Use the code chunk below to install and launch the five R packages.
+
+```{r}
+pacman::p_load(maptools, sf, raster, spatstat, tmap)
+```
+
+## **5.4 Spatial Data Wrangling**
+
+### **5.4.1 Importing the spatial data**
+
+In this section, [*st_read()*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package will be used to import these three geospatial data sets into R.
+
+```{r}
+childcare_sf <- st_read("../../data/geospatial/ChildCareServices.geojson") %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+sg_sf <- st_read(dsn = "../../data/geospatial", layer="CostalOutline")
+```
+
+```{r}
+mpsz_sf <- st_read(dsn = "../../data/geospatial", 
+                layer = "MP14_SUBZONE_WEB_PL")
+```
+
+Before we can use these data for analysis, it is important for us to ensure that they are projected in same projection system.
+
+> DIY: Using the appropriate **sf** function you learned in Hands-on Exercise 2, retrieve the referencing system information of these geospatial data.
+
+Notice that except `childcare_sf`, both `mpsz_sf` and `sg_sf` do not have proper crs information.
+
+> DIY: Using the method you learned in Lesson 2, assign the correct crs to mpsz_sf and sg_sf simple feature data frames.
+
+> DIY: If necessary, changing the referencing system to Singapore national projected coordinate system.
+
+### **5.4.2 Mapping the geospatial data sets**
+
+After checking the referencing system of each geospatial data data frame, it is also useful for us to plot a map to show their spatial patterns.
+
+> DIY: Using the mapping methods you learned in Hands-on Exercise 3, prepare a map as shown below.
+
+Notice that all the geospatial layers are within the same map extend. This shows that their referencing system and coordinate values are referred to similar spatial context. This is very important in any geospatial analysis.
+
+Alternatively, we can also prepare a pin map by using the code chunk below.
+
+```{r}
+tmap_mode('view')
+
+```
+
+```{r}
+tm_shape(childcare_sf)+
+  tm_dots()
+```
+
+Notice that at the interactive mode, **tmap** is using [**leaflet for R**](https://rstudio.github.io/leaflet/) API. The advantage of this interactive pin map is it allows us to navigate and zoom around the map freely. We can also query the information of each simple feature (i.e. the point) by clicking of them. Last but not least, you can also change the background of the internet map layer. Currently, three internet map layers are provided. They are: ESRI.WorldGrayCanvas, OpenStreetMap, and ESRI.WorldTopoMap. The default is ESRI.WorldGrayCanvas.
+
+> Reminder: Always remember to switch back to plot mode after the interactive map. This is because, each interactive mode will consume a connection. You should also avoid displaying ecessive numbers of interactive maps (i.e. not more than 10) in one RMarkdown document when publish on Netlify.
+
+## **5.5 Geospatial Data wrangling**
+
+Although simple feature data frame is gaining popularity again sp’s Spatial\* classes, there are, however, many geospatial analysis packages require the input geospatial data in sp’s Spatial\* classes. In this section, you will learn how to convert simple feature data frame to sp’s Spatial\* class.
+
+### **5.5.1 Converting sf data frames to sp’s Spatial\* class**
+
+The code chunk below uses [*as_Spatial()*](https://r4gdsa.netlify.app/chap05.html) of **sf** package to convert the three geospatial data from simple feature data frame to sp’s Spatial\* class.
+
+```{r}
+childcare <- as_Spatial(childcare_sf)
+sg <- as_Spatial(sg_sf)
+```
+
+> DIY: Using appropriate function, display the information of these three Spatial\* classes as shown below.
+
+```{r}
+childcare
+```
+
+```{r}
+sg
+```
+
+### **5.5.2 Converting the Spatial\* class into generic sp format**
+
+But what about PSP object???
+
+**spatstat** requires the analytical data in ***ppp*** object form. There is no direct way to convert a Spatial\* classes into ***ppp*** object. We need to convert the ***Spatial*** **classes**\* into ***Spatial*** object first.
+
+The codes chunk below converts the Spatial\* classes into generic sp objects.
+
+```{r}
+childcare_sp <- as(childcare, "SpatialPoints")
+sg_sp <- as(sg, "SpatialPolygons")
+```
+
+Next, you should display the sp objects properties as shown below.
+
+```{r}
+childcare_sp
+```
+
+```{r}
+sg_sp
+```
+
+> Challenge: Do you know what are the differences between Spatial\* classes and generic sp object?
+
+### **5.5.3 Converting the generic sp format into spatstat’s ppp format**
+
+Now, we will use *as.ppp()* function of **spatstat** to convert the spatial data into **spatstat**’s ***ppp*** object format.
+
+```{r}
+#| eval: false
+childcare_ppp <- as(childcare_sp, "ppp")
+childcare_ppp
+```
+
+Now, let us plot ***childcare_ppp*** and examine the different.
+
+```{r}
+#| eval: false
+plot(childcare_ppp)
+```
+
+# Additional Notes
+
+# Plotting GGPLOT2 Plots
+
+Install ggplot2 using pacman:
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, ggplot2)
+```
+
+```{r}
+data()
+```
+
+```{r}
+data(iris)
+```
+
+```{r}
+dim(iris)
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length))+geom_point()
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species, shape=Species))+geom_point()
+```
+
+## Identifying trends using geom_smooth()
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species))+geom_point() +geom_smooth()
+```
+
+```{r}
+#| eval: FALSE
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, col=Species)) +geom_point(color = "blue") + geom_smooth(color = "red")
+```
+
+coord_flip() can be used to pivot the whole chart - some charts may be easier to look this way: Good for finding count of unique values in a column and seeing any trends! Do a group by column and count(\*) to get the counts of each unique value of that column....
+
+```{r}
+ggplot(mtcars, aes(x = gear)) +geom_bar()+coord_flip()
+```
+
+# Plotly R Charts
+
+## Animation
+
+```{r}
+library(plotly)
+
+quakes = read.csv('https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv')
+
+fig <- quakes 
+fig <- fig %>%
+  plot_ly(
+    type = 'densitymapbox',
+    lat = ~Latitude,
+    lon = ~Longitude,
+    coloraxis = 'coloraxis',
+    radius = 10) 
+fig <- fig %>%
+  layout(
+    mapbox = list(
+      style="stamen-terrain",
+      center= list(lon=180)), coloraxis = list(colorscale = "Viridis"))
+
+fig
+
+```
+
+What are other challenging distribution curves we can try?
+
+### References
+
+-   <https://images.datacamp.com/image/upload/v1666806657/Marketing/Blog/ggplot2_cheat_sheet.pdf>
+
+-   <https://plotly.com/r/>
