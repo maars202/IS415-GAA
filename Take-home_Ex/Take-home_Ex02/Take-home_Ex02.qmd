@@ -64,7 +64,7 @@ Students are required to download them from eLearn.
 ## Data Acquisition
 
 |                                |                                                                           |
-|----------------------|--------------------------------------------------|
+|-----------------------|-------------------------------------------------|
 | [**Dataset Name**]{.underline} | [**Source**]{.underline}                                                  |
 | TAIWAN_VILLAGE_2020            | Historical map data of the village boundary: TWD97 longitude and latitude |
 | Dengue_Daily.csv               | Dengue Daily Confirmed Cases Since 1998                                   |
@@ -74,16 +74,19 @@ Students are required to download them from eLearn.
 Lets install the relevant R libraries needed using pacman.
 
 ```{r}
-pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr)
+#| eval: false
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)
 ```
 
 ### Setting Important Configurations
 
 ```{r}
+#| eval: false
 folderToSave <- "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/rds"
 ```
 
 ```{r}
+#| eval: false
 currentdirec = list.files(path="../../data/takehomeassigment2/geospatial", pattern=NULL, all.files=FALSE, 
     full.names=FALSE)
 currentdirec
@@ -92,6 +95,7 @@ currentdirec
 Reading the grab aspatial data:
 
 ```{r}
+#| eval: false
 dengue_df <- read_csv("../../data/takehomeassigment2/aspatial/Dengue_Daily.csv")
 dengue_df
 ```
@@ -99,23 +103,28 @@ dengue_df
 Getting Columns of dengue_df:
 
 ```{r}
+#| eval: false
 names(dengue_df)
 ```
 
 Lets print a summary of dengue_df to find the data distribution and other info:
 
 ```{r}
+#| eval: false
 summary(dengue_df[])
 ```
 
 We need to retrieve the coastal outline of Taiwan village so that we are able to fetch the dengue infections specifically within these boundaries.
 
 ```{r}
-taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE")
+#| eval: false
+taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE") %>% 
+  st_transform(crs = 3826)
 taiwan_sf
 ```
 
 ```{r}
+#| eval: false
 plot(taiwan_sf)
 ```
 
@@ -123,6 +132,7 @@ According to <https://epsg.io/3826>, the EPSG code for taiwan to be used as the 
 Thus, the data has been projected to Taiwan's coordinate system using 3826.
 
 ```{r}
+#| eval: false
 # find location of missing values
 print("Position of missing values ")
 which(is.na(dengue_df))
@@ -135,16 +145,36 @@ sum(is.na(dengue_df))
 colSums(is.na(dengue_df))
 ```
 
+::: callout-tip
+Interesting observation I had here was how all the columns had no missing values and yet the map was not being plotted.
+Then, I realised it was due to the null values being presented as "None" string instead of the numerical value such as the example below.
+:::
+
 ```{r}
+#| eval: false
 dengue_df[6,]$最小統計區中心點X
 ```
 
+Lets filter out all the None values to get valid x and y coordinates.
+最小統計區中心點X, 最小統計區中心點Y
+
 ```{r}
+#| eval: false
 dengue_df_filtered <- filter(dengue_df, 最小統計區中心點X != "None" & 最小統計區中心點Y != "None")
 dengue_df_filtered
 ```
 
+|     |
+|-----|
+|     |
+|     |
+
+todo: After filtering valid points, lets convert the latitude and longitude from TWD97 to wsg84 as it conforms to google maps and most global standards for easier analysis.
+
+<!--#  3826 https://epsg.io/transform#s_srs=3826&t_srs=4326&ops=3830&x=NaN&y=NaN -->
+
 ```{r}
+#| eval: false
 dengue_df_filtered <- st_as_sf(dengue_df_filtered, 
                        coords = c("最小統計區中心點X","最小統計區中心點Y"),
                        crs=3826) %>%
@@ -153,20 +183,29 @@ glimpse(dengue_df_filtered)
 ```
 
 ```{r}
+#| eval: false
+dengue_df_filtered
+```
+
+```{r}
+#| eval: false
 nrow(dengue_df_filtered[1:100,])
 ```
 
 ```{r}
+#| eval: false
 tmap_mode('view')
 tm_shape(dengue_df_filtered[1:100,])+
  tm_dots()
 ```
 
+最小統計區中心點X, 最小統計區中心點Y
+
 Let us save this combined dataframe to RDS so that we will not need to repeat the above steps.
 Replace filepath with the directory you would like to save the rds at.
 
 ```{r}
-
+#| eval: false
 filepath <- str_interp("${folderToSave}/dengue_df")
 write_rds(dengue_df_filtered, filepath) 
 ```
@@ -174,12 +213,24 @@ write_rds(dengue_df_filtered, filepath)
 Continue from here for subsequent steps:
 
 ```{r}
+#| eval: false
 filepath <- str_interp("${folderToSave}/dengue_df")
 dengue_df <- read_rds(filepath, refhook = NULL)
 dengue_df 
 ```
 
 # Analysis
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)
+folderToSave <- "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/rds"
+```
+
+```{r}
+taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE") %>% 
+  st_transform(crs = 3826)
+taiwan_sf
+```
 
 ```{r}
 filepath <- str_interp("${folderToSave}/dengue_df")
@@ -195,8 +246,7 @@ names(dengue_df)
 
 ## Data distribution for columns
 
-::: {.panel-tabset}
-
+::: panel-tabset
 #### Age
 
 ```{r}
@@ -228,6 +278,97 @@ ggplotly(p)
 dengue_df_2 <- dengue_df[order(dengue_df$年齡層, decreasing = TRUE),]
 dengue_df_2
 ```
+
+```{r}
+#plots will be done later due to time constraints
+#plot(dengue_df)
+```
+
+only need county codes:
+
+```{r}
+taiwan_sf_filtered <- filter(taiwan_sf, TOWNID %in% c('D01', 'D02', 'D04', 'D06', 'D07', 'D08', 'D32', 'D39'))
+taiwan_sf_filtered
+```
+
+```{r}
+taiwan_s <- as_Spatial(taiwan_sf_filtered)
+taiwan_sp <- as(taiwan_s, "SpatialPolygons")
+taiwan_owin <- as(taiwan_sp, "owin")
+plot(taiwan_owin)
+```
+
+```{r}
+#dengue_df
+#dengue_df_filtered
+dengue_df_filtered <- st_as_sf(dengue_df, 
+                       coords = c("最小統計區中心點X","最小統計區中心點Y"),
+                       crs=3826) %>%
+st_transform(crs = 3826)
+glimpse(dengue_df_filtered)
+```
+
+```{r}
+dengue_df_spatial_object <- as_Spatial(dengue_df_filtered)
+```
+
+```{r}
+dengue_sp <- as(dengue_df_spatial_object, "SpatialPoints")
+dengue_sp
+```
+
+```{r}
+dengue_ppp <- as(dengue_sp, "ppp")
+dengue_ppp
+```
+
+```{r}
+plot(dengue_ppp)
+```
+
+```{r}
+summary(dengue_ppp)
+```
+
+If we want to know how many locations have more than one point event, we can use the code chunk below.
+
+```{r}
+duplicate_counts <- sum(multiplicity(dengue_ppp) > 1)
+duplicate_counts
+```
+
+```{r}
+#plotting to be done on AWS EC2 due to low computing power
+#tmap_mode('view')
+#tm_shape(dengue_df_filtered) +
+#  tm_dots(alpha=0.4, 
+#          size=0.05)
+
+
+```
+
+```{r}
+dengueTAIWAN_ppp = dengue_ppp[taiwan_owin]
+```
+
+```{r}
+#plotting to be done on AWS EC2 due to low computing power
+#plot(dengueTAIWAN_ppp)
+```
+
+::: callout-note
+Planning:
+
+-   use statistical means to get distribution and see which one best - identify unique patterns and write reflection on them
+
+<!-- -->
+
+-   add the cold and hot spots as separate layers for users to interact with
+
+-   facet plots
+
+-   make ranges for plots similar when comparing plots side by side
+:::
 
 # References
 
