@@ -1,9 +1,9 @@
 ---
-title: "Hands-on Exercise 5: Global Measures of Spatial Autocorrelation & Local Measures of Spatial Autocorrelation"
+title: "Hands-on Exercise 8: Geographical Segmentation with Spatially Constrained Clustering Techniques"
 author: "Maaruni"
 execute: 
   warning: false
-date: 01/30/2024
+date: 02/23/2024
 date-modified: "`r Sys.Date()`"
 ---
 
