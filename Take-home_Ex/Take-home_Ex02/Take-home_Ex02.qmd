@@ -75,7 +75,7 @@ Lets install the relevant R libraries needed using pacman.
 
 ```{r}
 #| eval: false
-pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)
+pacman::p_load(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr, spacetime)
 ```
 
 ### Setting Important Configurations
@@ -408,7 +408,7 @@ dengue_df_distribution = dengue_df_combined %>% group_by(VILLTOWN) %>%
 dengue_df_distribution
 ```
 
-this has 3082 features \< 21 periods \* 258 lcoatoins = 5418
+this has 3082 features \< 20 periods \* 258 lcoatoins = 5160
 
 ```{r}
 dengue_df_combined <- st_drop_geometry(dengue_df_combined)
@@ -422,22 +422,24 @@ creating rows for missing weeks for each region:
 #dengue_df_combined
 #for each town check if the week exists is not then add row for that week for that reach with count 0 
 total_invalids = 0
-for(i in 1:length(dengue_df_distribution))
+for(i in 1:nrow(dengue_df_distribution)+1)
 {
   region = dengue_df_distribution$VILLTOWN[i]
+  cat("region: ", region)
   for(j in 31:50){
     
     #print(length(dengue_df_combined[dengue_df_combined['epiweek(Day_of_onset)'] == j & dengue_df_combined['VILLTOWN'] == region]) != 3)
     
     
     if (length(dengue_df_combined[dengue_df_combined['epiweek(Day_of_onset)'] == j
-          & dengue_df_combined['VILLTOWN'] == region]) == 0){
+          & dengue_df_combined['VILLTOWN'] == region]) != 3){
     matching_week_region = c(region,j, 0)
+    #print(matching_week_region)
     dengue_df_combined = rbind(dengue_df_combined,matching_week_region) 
-    #total_invalids = total_invalids + 1
-    print("invalid")
+    total_invalids = total_invalids + 1
     }
-    }
+  }
+  print(total_invalids)
 }
 print(total_invalids)
 ```
@@ -445,6 +447,7 @@ print(total_invalids)
 ```{r}
 dengue_df_distribution2 = dengue_df_combined %>% group_by(VILLTOWN) %>%
   summarise(total_count_weeks = n())
+dengue_df_distribution2 = dengue_df_distribution2[dengue_df_distribution2$total_count_weeks == 20, ]
 dengue_df_distribution2
 ```
 
@@ -454,7 +457,42 @@ taiwan_sf_filtered
 ```
 
 ```{r}
-dengue_df_combined
+#dengue_df_combined[dengue_df_combined$VILLTOWN  dengue_df_distribution2$VILLTOWN]
+shortlisted_colors <- subset(dengue_df_combined, VILLTOWN %in% dengue_df_distribution2$VILLTOWN)
+shortlisted_colors
+```
+
+4533 \< 5160 – still missing 600?
+why not filling up
+
+```{r}
+pacman::p_load(sf, sfdep, tmap, plotly, tidyverse)
+```
+
+```{r}
+typeof(dengue_df_combined['epiweek(Day_of_onset)'])
+print((dengue_df_combined['epiweek(Day_of_onset)']))
+#transform(dengue_df_combined['epiweek(Day_of_onset)'], char = as.integer(char))
+#sapply(dengue_df_combined['epiweek(Day_of_onset)'], integer)
+dengue_df_combined['epiweek(Day_of_onset)'] <- as.integer(unlist(dengue_df_combined['epiweek(Day_of_onset)']))
+```
+
+```{r}
+is_na(dengue_df_combined)
+```
+
+```{r}
+bos = spacetime(shortlisted_colors, taiwan_sf_filtered,
+                .loc_col = "VILLTOWN",
+                .time_col = "epiweek(Day_of_onset)")
+```
+
+```{r}
+bos
+```
+
+```{r}
+is_spacetime_cube(bos)
 ```
 
 this might be useful for points that have missing towns:
