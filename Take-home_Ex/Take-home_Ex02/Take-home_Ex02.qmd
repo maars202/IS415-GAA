@@ -340,24 +340,127 @@ dengue_df_count
 ```
 
 ```{r}
-length(replace(dengue_df_count$VILLNAME, "None", NA))
+length(replace(dengue_df_count$VILLNAME, "None", ""))
 length(dengue_df_count$VILLNAME)
 ```
 
 ```{r}
-dengue_df_count$VILLNAME  = replace(dengue_df_count$VILLNAME, "None", NA)
-colSums(is.na(dengue_df_count))
+#dengue_df_count$VILLNAME  = replace(dengue_df_count$VILLNAME, "None", NA)
+#colSums(is.na(dengue_df_count))
+dengue_df_count$VILLNAME[dengue_df_count$VILLNAME == 'None'] <- ''
+dengue_df_count
 ```
+
+```{r}
+taiwan_sf_filtered$VILLNAME[taiwan_sf_filtered$VILLNAME == 'None'] <- ''
+taiwan_sf_filtered
+```
+
+```{r}
+#dengue_df_count$VILLNAME[dengue_df_count$VILLNAME == 'None']
+#apply(X = is.na(dengue_df_count), MARGIN = 2, FUN = sum)
+#apply(X = dengue_df_count$VILLNAME[dengue_df_count$VILLNAME == 'None'], MARGIN = 2, FUN = sum)
+#is.na(dengue_df_count)
+#dengue_df_count[dengue_df_count$VILLNAME == 'None']
+print(length(dengue_df_count$VILLNAME))
+print(table(dengue_df_count$VILLNAME[dengue_df_count$VILLNAME == '']))
+print(length(taiwan_sf_filtered$VILLNAME))
+print(table(taiwan_sf_filtered$VILLNAME[taiwan_sf_filtered$VILLNAME == 'None']))
+
+```
+
+since frequency of "None" and "" is 0 in taiwan_sf_filtered means it has no null values as such, the entries with town = "None" will not be matched to any of the polygons in the geospatila data later during the left join anyway.
 
 ```{r}
 dengue_df_count$VILLTOWN = paste(dengue_df_count$VILLNAME, dengue_df_count$TOWNNAME)
 taiwan_sf_filtered$VILLTOWN = paste(taiwan_sf_filtered$VILLNAME, taiwan_sf_filtered$TOWNNAME)
 ```
 
+```{r}
+dengue_df_count <- st_drop_geometry(dengue_df_count)
+dengue_df_count
+```
+
 left join to aspatial data to add the attributes of aspatial to regions
 
 ```{r}
-dengue_df_count = left_join(taiwan_sf_filtered, dengue_df_count, on=(VILLTOWN))
+dengue_df_combined = left_join(taiwan_sf_filtered, dengue_df_count)
+dengue_df_combined
+```
+
+```{r}
+print(table(dengue_df_combined$VILLNAME[dengue_df_combined$VILLNAME == 'None']))
+print(length(table(dengue_df_combined$VILLNAME)))
+print(names(dengue_df_combined))
+```
+
+```{r}
+dengue_df_combined <- dengue_df_combined %>%
+  select(11, 12, 13)
+dengue_df_combined
+```
+
+checking entries per villtown should be the same periods:
+
+```{r}
+dengue_df_distribution = dengue_df_combined %>% group_by(VILLTOWN) %>%
+  summarise(total_count_weeks = n())
+dengue_df_distribution
+```
+
+this has 3082 features \< 21 periods \* 258 lcoatoins = 5418
+
+```{r}
+dengue_df_combined <- st_drop_geometry(dengue_df_combined)
+dengue_df_combined
+```
+
+creating rows for missing weeks for each region:
+
+```{r}
+#dengue_df_distribution
+#dengue_df_combined
+#for each town check if the week exists is not then add row for that week for that reach with count 0 
+total_invalids = 0
+for(i in 1:length(dengue_df_distribution))
+{
+  region = dengue_df_distribution$VILLTOWN[i]
+  for(j in 31:50){
+    
+    #print(length(dengue_df_combined[dengue_df_combined['epiweek(Day_of_onset)'] == j & dengue_df_combined['VILLTOWN'] == region]) != 3)
+    
+    
+    if (length(dengue_df_combined[dengue_df_combined['epiweek(Day_of_onset)'] == j
+          & dengue_df_combined['VILLTOWN'] == region]) == 0){
+    matching_week_region = c(region,j, 0)
+    dengue_df_combined = rbind(dengue_df_combined,matching_week_region) 
+    #total_invalids = total_invalids + 1
+    print("invalid")
+    }
+    }
+}
+print(total_invalids)
+```
+
+```{r}
+dengue_df_distribution2 = dengue_df_combined %>% group_by(VILLTOWN) %>%
+  summarise(total_count_weeks = n())
+dengue_df_distribution2
+```
+
+```{r}
+print(length(taiwan_sf_filtered))
+taiwan_sf_filtered
+```
+
+```{r}
+dengue_df_combined
+```
+
+this might be useful for points that have missing towns:
+
+```         
+left_join(dfx, dfy, join_by(closest(a < b))) # similar to above, but only take the closest match
 ```
 
 find any na values
@@ -385,6 +488,8 @@ vacrate_anim <-
 ```
 
 for town_vill with na data add 0 and add all teh weeks that are missing – so that the shape of it will match the region column of taiwan_sf_filtered so that space time object can be retreieved
+
+drop st
 
 ```{r}
 
