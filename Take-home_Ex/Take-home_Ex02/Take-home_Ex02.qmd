@@ -173,13 +173,14 @@ filter by epiweek 31 to 50 in 2023 - <https://www.cmmcp.org/sites/g/files/vyhlif
 
 ```{r}
 dengue_df_filtered$epiweek = epiweek(dengue_df_filtered$發病日)
-dengue_df_filtered
+names(dengue_df_filtered)
 ```
 
 ```{r}
-$start_date = ""
-$end_date = ""
-dengue_df_filtered = filter(dengue_df_filtered, epiweek == )
+start_date = "2023-07-30"
+end_date = "2023-12-16"
+dengue_df_filtered = filter(dengue_df_filtered, 發病日 >= start_date & 發病日 <= end_date)
+dengue_df_filtered
 ```
 
 todo: After filtering valid points, lets convert the latitude and longitude from TWD97 to wsg84 as it conforms to google maps and most global standards for easier analysis.
@@ -193,16 +194,6 @@ dengue_df_filtered <- st_as_sf(dengue_df_filtered,
                        crs=3826) %>%
 st_transform(crs = 3826)
 glimpse(dengue_df_filtered)
-```
-
-```{r}
-#| eval: false
-dengue_df_filtered
-```
-
-```{r}
-#| eval: false
-nrow(dengue_df_filtered[1:100,])
 ```
 
 ```{r}
@@ -240,8 +231,7 @@ folderToSave <- "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-G
 ```
 
 ```{r}
-taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE") %>% 
-  st_transform(crs = 3826)
+taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE")
 taiwan_sf
 ```
 
@@ -302,6 +292,10 @@ taiwan_sf_filtered
 recode chinese column names to enlgish
 
 ```{r}
+names(taiwan_sf_filtered)
+```
+
+```{r}
 names(dengue_df)
 ```
 
@@ -313,8 +307,8 @@ names(dengue_df)[4] = "Gender"
 names(dengue_df)[5] = "Age_group"
 
 names(dengue_df)[6] = "County_and_city_of_residence"
-names(dengue_df)[7] = "Township_of_residence"
-names(dengue_df)[8] = "Living_in_a_village"
+names(dengue_df)[7] = "TOWNNAME"
+names(dengue_df)[8] = "VILLNAME"
 names(dengue_df)[9] = "Minimum_statistical_area"
 names(dengue_df)[10] = "First_level_statistical_area"
 
@@ -340,10 +334,45 @@ names(dengue_df)[24] = "Home_Office_Infection_Township_Code"
 group by village town and week to get the count according to week and region
 
 ```{r}
+dengue_df_count = dengue_df %>% group_by(VILLNAME, TOWNNAME, epiweek(Day_of_onset)) %>%
+  summarise(total_count = n())
+dengue_df_count
+```
 
+```{r}
+length(replace(dengue_df_count$VILLNAME, "None", NA))
+length(dengue_df_count$VILLNAME)
+```
+
+```{r}
+dengue_df_count$VILLNAME  = replace(dengue_df_count$VILLNAME, "None", NA)
+colSums(is.na(dengue_df_count))
+```
+
+```{r}
+dengue_df_count$VILLTOWN = paste(dengue_df_count$VILLNAME, dengue_df_count$TOWNNAME)
+taiwan_sf_filtered$VILLTOWN = paste(taiwan_sf_filtered$VILLNAME, taiwan_sf_filtered$TOWNNAME)
 ```
 
 left join to aspatial data to add the attributes of aspatial to regions
+
+```{r}
+dengue_df_count = left_join(taiwan_sf_filtered, dengue_df_count, on=(VILLTOWN))
+```
+
+find any na values
+
+```{r}
+
+```
+
+add rwos for cities with missing weeks and put 0 - to make spacetime cube later with rihgt periods and values
+
+21 periods and ...locations – mnmo isnt it supposed ot be 20 time periods from 31 to 50th epiweek?
+
+```{r}
+
+```
 
 do an animation of the chanigng counts in all the regions over time similar to /..
 
@@ -356,6 +385,10 @@ vacrate_anim <-
 ```
 
 for town_vill with na data add 0 and add all teh weeks that are missing – so that the shape of it will match the region column of taiwan_sf_filtered so that space time object can be retreieved
+
+```{r}
+
+```
 
 ::: callout-note
 Planning:
