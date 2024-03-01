@@ -64,7 +64,7 @@ Students are required to download them from eLearn.
 ## Data Acquisition
 
 |                                |                                                                           |
-|-----------------------|-------------------------------------------------|
+|----------------------|--------------------------------------------------|
 | [**Dataset Name**]{.underline} | [**Source**]{.underline}                                                  |
 | TAIWAN_VILLAGE_2020            | Historical map data of the village boundary: TWD97 longitude and latitude |
 | Dengue_Daily.csv               | Dengue Daily Confirmed Cases Since 1998                                   |
@@ -168,6 +168,19 @@ dengue_df_filtered
 |-----|
 |     |
 |     |
+
+filter by epiweek 31 to 50 in 2023 - <https://www.cmmcp.org/sites/g/files/vyhlif2966/f/uploads/epiweekcalendar2023.pdf>
+
+```{r}
+dengue_df_filtered$epiweek = epiweek(dengue_df_filtered$發病日)
+dengue_df_filtered
+```
+
+```{r}
+$start_date = ""
+$end_date = ""
+dengue_df_filtered = filter(dengue_df_filtered, epiweek == )
+```
 
 todo: After filtering valid points, lets convert the latitude and longitude from TWD97 to wsg84 as it conforms to google maps and most global standards for easier analysis.
 
@@ -275,11 +288,6 @@ ggplotly(p)
 :::
 
 ```{r}
-dengue_df_2 <- dengue_df[order(dengue_df$年齡層, decreasing = TRUE),]
-dengue_df_2
-```
-
-```{r}
 #plots will be done later due to time constraints
 #plot(dengue_df)
 ```
@@ -291,70 +299,63 @@ taiwan_sf_filtered <- filter(taiwan_sf, TOWNID %in% c('D01', 'D02', 'D04', 'D06'
 taiwan_sf_filtered
 ```
 
+recode chinese column names to enlgish
+
 ```{r}
-taiwan_s <- as_Spatial(taiwan_sf_filtered)
-taiwan_sp <- as(taiwan_s, "SpatialPolygons")
-taiwan_owin <- as(taiwan_sp, "owin")
-plot(taiwan_owin)
+names(dengue_df)
 ```
 
 ```{r}
-#dengue_df
-#dengue_df_filtered
-dengue_df_filtered <- st_as_sf(dengue_df, 
-                       coords = c("最小統計區中心點X","最小統計區中心點Y"),
-                       crs=3826) %>%
-st_transform(crs = 3826)
-glimpse(dengue_df_filtered)
+names(dengue_df)[1] = "Day_of_onset"
+names(dengue_df)[2] = "Day_of_judgement"
+names(dengue_df)[3] = "Day_of_report"
+names(dengue_df)[4] = "Gender"
+names(dengue_df)[5] = "Age_group"
+
+names(dengue_df)[6] = "County_and_city_of_residence"
+names(dengue_df)[7] = "Township_of_residence"
+names(dengue_df)[8] = "Living_in_a_village"
+names(dengue_df)[9] = "Minimum_statistical_area"
+names(dengue_df)[10] = "First_level_statistical_area"
+
+names(dengue_df)[11] = "Secondary_level_statistical_area"
+names(dengue_df)[12] = "Infected_counties_and_cities"
+names(dengue_df)[13] = "Infected_towns"
+names(dengue_df)[14] = "Infect_the_village"
+names(dengue_df)[15] = "Whether_to_immigrate_from_abroad"
+
+names(dengue_df)[16] = "Infected_countries"
+names(dengue_df)[17] = "Number_of_cases"
+names(dengue_df)[18] = "Residential_village_code"
+names(dengue_df)[19] = "Infected_Village_Code"
+names(dengue_df)[20] = "Serotype"
+
+names(dengue_df)[21] = "Ministry_of_Interior_county"
+names(dengue_df)[22] = "Home_Office_Township_Code_of_Residence"
+names(dengue_df)[23] = "Ministry_of_Interior"
+names(dengue_df)[24] = "Home_Office_Infection_Township_Code"
+
 ```
+
+group by village town and week to get the count according to week and region
 
 ```{r}
-dengue_df_spatial_object <- as_Spatial(dengue_df_filtered)
+
 ```
+
+left join to aspatial data to add the attributes of aspatial to regions
+
+do an animation of the chanigng counts in all the regions over time similar to /..
 
 ```{r}
-dengue_sp <- as(dengue_df_spatial_object, "SpatialPoints")
-dengue_sp
+vacrate_anim <-
+  tm_shape(combined_jkt_vac) + tm_fill("VaccinationRate",
+            palette = "Greens") +
+    tm_borders(lwd = 0.1) +
+  tm_facets(along = "period", free.coords = FALSE)
 ```
 
-```{r}
-dengue_ppp <- as(dengue_sp, "ppp")
-dengue_ppp
-```
-
-```{r}
-plot(dengue_ppp)
-```
-
-```{r}
-summary(dengue_ppp)
-```
-
-If we want to know how many locations have more than one point event, we can use the code chunk below.
-
-```{r}
-duplicate_counts <- sum(multiplicity(dengue_ppp) > 1)
-duplicate_counts
-```
-
-```{r}
-#plotting to be done on AWS EC2 due to low computing power
-#tmap_mode('view')
-#tm_shape(dengue_df_filtered) +
-#  tm_dots(alpha=0.4, 
-#          size=0.05)
-
-
-```
-
-```{r}
-dengueTAIWAN_ppp = dengue_ppp[taiwan_owin]
-```
-
-```{r}
-#plotting to be done on AWS EC2 due to low computing power
-#plot(dengueTAIWAN_ppp)
-```
+for town_vill with na data add 0 and add all teh weeks that are missing – so that the shape of it will match the region column of taiwan_sf_filtered so that space time object can be retreieved
 
 ::: callout-note
 Planning:

@@ -75,6 +75,10 @@ hunan <- left_join(hunan,hunan2012) %>%
   select(1:4, 7, 15)
 ```
 
+```{r}
+names(hunan)
+```
+
 ### **9.3.4 Visualising Regional Development Indicator**
 
 Now, we are going to prepare a basemap and a choropleth map showing the distribution of GDPPC 2012 by using `qtm()` of **tmap** package.
@@ -94,7 +98,7 @@ quantile <- tm_shape(hunan) +
   tm_borders(alpha = 0.5) +
   tm_layout(main.title = "Equal quantile classification")
 
-tmap_arrange(equal, 
+tm_shape(hunan) + tm_fill() + tmap_arrange(equal, 
              quantile, 
              asp=1, 
              ncol=2)
