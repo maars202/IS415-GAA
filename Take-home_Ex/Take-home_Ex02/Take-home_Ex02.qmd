@@ -245,58 +245,7 @@ Columns in dengue_df:
 
 ```{r}
 names(dengue_df)
-```
-
-## Data distribution for columns
-
-::: panel-tabset
-#### Age
-
-```{r}
-#| eval: false
-g <- ggplot(dengue_df_2, aes(年齡層))  
-p <-  g + geom_bar() + ggtitle("Count of Entries by Age") +  xlab("Age") + ylab("Count")
-
-ggplotly(p) 
-```
-
-#### **感染縣市**
-
-```{r}
-#| eval: false
-g <- ggplot(dengue_df, aes(感染縣市))  
-p <-  g + geom_bar() + ggtitle("Count of Entries by 感染縣市") +  xlab("感染縣市") + ylab("Count")
-
-ggplotly(p) 
-
-
-ggplotly(p)
-
-```
-
-\
-:::
-
-```{r}
-#plots will be done later due to time constraints
-#plot(dengue_df)
-```
-
-only need county codes:
-
-```{r}
-taiwan_sf_filtered <- filter(taiwan_sf, TOWNID %in% c('D01', 'D02', 'D04', 'D06', 'D07', 'D08', 'D32', 'D39'))
-taiwan_sf_filtered
-```
-
-recode chinese column names to enlgish
-
-```{r}
-names(taiwan_sf_filtered)
-```
-
-```{r}
-names(dengue_df)
+#感染縣市
 ```
 
 ```{r}
@@ -328,7 +277,54 @@ names(dengue_df)[21] = "Ministry_of_Interior_county"
 names(dengue_df)[22] = "Home_Office_Township_Code_of_Residence"
 names(dengue_df)[23] = "Ministry_of_Interior"
 names(dengue_df)[24] = "Home_Office_Infection_Township_Code"
+```
 
+## Data distribution for columns
+
+::: panel-tabset
+#### Age
+
+```{r}
+#| eval: false
+g <- ggplot(dengue_df_2, aes(年齡層))  
+p <-  g + geom_bar() + ggtitle("Count of Entries by Age") +  xlab("Age") + ylab("Count")
+
+ggplotly(p) 
+```
+
+#### Infected_counties_and_cities
+
+```{r}
+#| eval: false
+g <- ggplot(dengue_df, aes(Infected_counties_and_cities))  
+p <-  g + geom_bar() + ggtitle("Count of Entries by 感染縣市") +  xlab("Infected_counties_and_cities") + ylab("Count")
+
+ggplotly(p) 
+
+
+ggplotly(p)
+
+```
+
+\
+:::
+
+```{r}
+#plots will be done later due to time constraints
+#plot(dengue_df)
+```
+
+only need county codes:
+
+```{r}
+taiwan_sf_filtered <- filter(taiwan_sf, TOWNID %in% c('D01', 'D02', 'D04', 'D06', 'D07', 'D08', 'D32', 'D39'))
+taiwan_sf_filtered
+```
+
+recode chinese column names to enlgish
+
+```{r}
+names(taiwan_sf_filtered)
 ```
 
 group by village town and week to get the count according to week and region
@@ -339,21 +335,11 @@ dengue_df_count = dengue_df %>% group_by(VILLNAME, TOWNNAME, epiweek(Day_of_onse
 dengue_df_count
 ```
 
+maybe can save here:
+
 ```{r}
 length(replace(dengue_df_count$VILLNAME, "None", ""))
 length(dengue_df_count$VILLNAME)
-```
-
-```{r}
-#dengue_df_count$VILLNAME  = replace(dengue_df_count$VILLNAME, "None", NA)
-#colSums(is.na(dengue_df_count))
-dengue_df_count$VILLNAME[dengue_df_count$VILLNAME == 'None'] <- ''
-dengue_df_count
-```
-
-```{r}
-taiwan_sf_filtered$VILLNAME[taiwan_sf_filtered$VILLNAME == 'None'] <- ''
-taiwan_sf_filtered
 ```
 
 ```{r}
@@ -389,8 +375,7 @@ dengue_df_combined
 ```
 
 ```{r}
-print(table(dengue_df_combined$VILLNAME[dengue_df_combined$VILLNAME == 'None']))
-print(length(table(dengue_df_combined$VILLNAME)))
+print(nrow(table(dengue_df_combined$VILLNAME)))
 print(names(dengue_df_combined))
 ```
 
@@ -410,6 +395,8 @@ dengue_df_distribution
 
 this has 3082 features \< 20 periods \* 258 lcoatoins = 5160
 
+or is it 253 locations
+
 ```{r}
 dengue_df_combined <- st_drop_geometry(dengue_df_combined)
 dengue_df_combined
@@ -422,7 +409,7 @@ creating rows for missing weeks for each region:
 #dengue_df_combined
 #for each town check if the week exists is not then add row for that week for that reach with count 0 
 total_invalids = 0
-for(i in 1:nrow(dengue_df_distribution)+1)
+for(i in 1:nrow(dengue_df_distribution))
 {
   region = dengue_df_distribution$VILLTOWN[i]
   cat("region: ", region)
@@ -447,7 +434,9 @@ print(total_invalids)
 ```{r}
 dengue_df_distribution2 = dengue_df_combined %>% group_by(VILLTOWN) %>%
   summarise(total_count_weeks = n())
-dengue_df_distribution2 = dengue_df_distribution2[dengue_df_distribution2$total_count_weeks == 20, ]
+#dengue_df_distribution2_NULL = dengue_df_distribution2[dengue_df_distribution2$total_count_weeks != 20, ]
+#dengue_df_distribution2 = dengue_df_distribution2[dengue_df_distribution2$total_count_weeks == 20, ]
+
 dengue_df_distribution2
 ```
 
@@ -464,13 +453,25 @@ dengue_df_combined_correct_size
 
 ```{r}
 taiwan_sf_filtered_correct_size = subset(taiwan_sf_filtered, VILLTOWN %in% dengue_df_combined_correct_size$VILLTOWN)
+taiwan_sf_filtered_correct_size_NULL = subset(taiwan_sf_filtered, VILLTOWN %in% dengue_df_distribution2_NULL$VILLTOWN)
+
 taiwan_sf_filtered_correct_size
+```
+
+```{r}
+plot(taiwan_sf_filtered_correct_size_NULL)
 ```
 
 ```{r}
 #dengue_df_combined[dengue_df_combined$VILLTOWN  dengue_df_distribution2$VILLTOWN]
 dengue_df_combined_correct_size <- subset(dengue_df_combined, VILLTOWN %in% taiwan_sf_filtered_correct_size$VILLTOWN)
 dengue_df_combined_correct_size
+```
+
+```{r}
+dengue_df_distribution4 = dengue_df_combined_correct_size %>% group_by(VILLTOWN) %>%
+  summarise(total_count_weeks = n())
+dengue_df_distribution4
 ```
 
 224 locations, 20 time periods, how many regions are there?
@@ -491,10 +492,24 @@ print((dengue_df_combined['epiweek(Day_of_onset)']))
 #transform(dengue_df_combined['epiweek(Day_of_onset)'], char = as.integer(char))
 #sapply(dengue_df_combined['epiweek(Day_of_onset)'], integer)
 dengue_df_combined['epiweek(Day_of_onset)'] <- as.integer(unlist(dengue_df_combined['epiweek(Day_of_onset)']))
+dengue_df_combined['total_count'] <- as.integer(unlist(dengue_df_combined['total_count']))
+dengue_df_combined_correct_size['epiweek(Day_of_onset)'] <- as.integer(unlist(dengue_df_combined_correct_size['epiweek(Day_of_onset)']))
+dengue_df_combined_correct_size['total_count'] <- as.integer(unlist(dengue_df_combined_correct_size['total_count']))
+
+dengue_df_combined_correct_size
+```
+
+These are towns with no observations.
+However, since they exist as neighbors of other cities we need to add dummy observations for all the weeks for each of these towsn as well to get 258 \* 20 = 5160 observations for spacetime cube later:
+
+```{r}
+#sum(is.na(dengue_df_combined_correct_size))
+dengue_df_combined_correct_size[is.na(dengue_df_combined_correct_size$VILLTOWN), ]
+dengue_df_combined_correct_size[is.na(dengue_df_combined_correct_size$`epiweek(Day_of_onset)`), ]$VILLTOWN
 ```
 
 ```{r}
-is_na(dengue_df_combined)
+dengue_df_combined_correct_size[dengue_df_combined_correct_size$VILLTOWN == '鹿耳里 安南區', ]
 ```
 
 ```{r}
@@ -532,6 +547,14 @@ head(dengue_nb)
 ```
 
 ```{r}
+vacrate_anim <-
+  tm_shape(combined_jkt_vac) + tm_fill("VaccinationRate",
+            palette = "Greens") +
+    tm_borders(lwd = 0.1) +
+  tm_facets(along = "period", free.coords = FALSE)
+```
+
+```{r}
 row.names(dengue_nb) <- NULL
 ```
 
@@ -566,7 +589,34 @@ isolating only one week :
 
 ```{r}
 dengue_nb_week31 = filter(dengue_nb, dengue_nb$`epiweek(Day_of_onset)` == 31)
+row.names(dengue_nb) <- NULL
 dengue_nb_week31
+```
+
+```{r}
+#dengue_nb_week31 = filter(dengue_nb_week31, lengths(dengue_nb_week31$nb) != 1)
+#row.names(dengue_nb) <- NULL
+#dengue_nb_week31
+```
+
+some of them have no neighbors
+
+```{r}
+lengths(dengue_nb_week31[1, ]$nb)
+```
+
+```{r}
+dengue_nb_week31[187, ]$nb
+lengths(dengue_nb_week31[187, ]$nb)
+print("--------------")
+card(dengue_nb_week31[1, ]$nb[1])
+print("--------------")
+card(dengue_nb_week31[187, ]$nb)
+
+```
+
+```{r}
+dengue_nb_week31$nb
 ```
 
 ```{r}
