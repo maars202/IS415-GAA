@@ -458,9 +458,25 @@ taiwan_sf_filtered
 
 ```{r}
 #dengue_df_combined[dengue_df_combined$VILLTOWN  dengue_df_distribution2$VILLTOWN]
-shortlisted_colors <- subset(dengue_df_combined, VILLTOWN %in% dengue_df_distribution2$VILLTOWN)
-shortlisted_colors
+dengue_df_combined_correct_size <- subset(dengue_df_combined, VILLTOWN %in% dengue_df_distribution2$VILLTOWN)
+dengue_df_combined_correct_size
 ```
+
+```{r}
+taiwan_sf_filtered_correct_size = subset(taiwan_sf_filtered, VILLTOWN %in% dengue_df_combined_correct_size$VILLTOWN)
+taiwan_sf_filtered_correct_size
+```
+
+```{r}
+#dengue_df_combined[dengue_df_combined$VILLTOWN  dengue_df_distribution2$VILLTOWN]
+dengue_df_combined_correct_size <- subset(dengue_df_combined, VILLTOWN %in% taiwan_sf_filtered_correct_size$VILLTOWN)
+dengue_df_combined_correct_size
+```
+
+224 locations, 20 time periods, how many regions are there?
+in the aspatial data (225) and spatial data (224)
+
+we need to remove the one region that is not present in aspatial data for the spacetime cube
 
 4533 \< 5160 – still missing 600?
 why not filling up
@@ -482,7 +498,7 @@ is_na(dengue_df_combined)
 ```
 
 ```{r}
-bos = spacetime(shortlisted_colors, taiwan_sf_filtered,
+bos = spacetime(dengue_df_combined_correct_size, taiwan_sf_filtered_correct_size,
                 .loc_col = "VILLTOWN",
                 .time_col = "epiweek(Day_of_onset)")
 ```
@@ -492,7 +508,70 @@ bos
 ```
 
 ```{r}
+print(224 * 20)
+print(nrow(bos))
+```
+
+```{r}
 is_spacetime_cube(bos)
+```
+
+```{r}
+dengue_nb <- bos %>%
+  activate("geometry") %>%
+  mutate(nb = include_self(st_contiguity(geometry)),
+         wt = st_inverse_distance(nb, geometry,
+                                  scale = 1,
+                                  alpha = 1),
+         .before = 1) %>%
+  set_nbs("nb") %>%
+  set_wts("wt")
+
+print(summary(dengue_nb))
+head(dengue_nb)
+```
+
+```{r}
+row.names(dengue_nb) <- NULL
+```
+
+```{r}
+cat("neighbors of region 1: ")
+print( dengue_nb[1, ]$nb)
+cat("neighbors of region 6: ")
+print( dengue_nb[6, ]$nb)
+
+cat("neighbors of region 118: ")
+print( dengue_nb[118, ]$nb)
+cat("neighbors of region 118: ")
+print( dengue_nb[118, ]$nb)
+```
+
+## **Computing Gi\***
+
+```{r}
+dengue_nb['total_count'] <- as.integer(unlist(dengue_nb['total_count']))
+dengue_nb
+```
+
+```{r}
+gistars <- dengue_nb %>%
+  group_by('epiweek(Day_of_onset)') %>%
+  mutate(gi_star = local_gstar_perm(
+    total_count, nb, wt)) %>%
+  tidyr::unnest(gi_star)
+```
+
+isolating only one week :
+
+```{r}
+dengue_nb_week31 = filter(dengue_nb, dengue_nb$`epiweek(Day_of_onset)` == 31)
+dengue_nb_week31
+```
+
+```{r}
+gi_star = local_gstar_perm(
+    dengue_nb_week31$total_count, dengue_nb_week31$nb, dengue_nb_week31$wt)
 ```
 
 this might be useful for points that have missing towns:
