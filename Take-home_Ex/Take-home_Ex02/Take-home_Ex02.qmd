@@ -455,6 +455,11 @@ bos = complete_spacetime_cube(bos)
 head(bos)
 ```
 
+```{r}
+valid_rows = dplyr::count(bos, epiweek, VILLTOWN)
+head(valid_rows)
+```
+
 Lets get the neighbors and weights around the region.
 
 ```{r}
@@ -484,12 +489,62 @@ cat("neighbors of region 160: ")
 print( dengue_nb[160, ]$nb)
 ```
 
+## **Performing Emerging Hotspot Analysis**
+
+Lets use the spacetime cube generated to find out trends of how the dengue is spreading.
+This information can be useful for policy makers in taiwan to set up more posters and awareness campaigns to get people in more vulnerable regions to take action to not only reduce dengue onset after it has happened but also encourage them to take preventive measures so it never happens to them as well.
+
 ```{r}
-gi_stars <- dengue_nb %>% 
-  group_by(epiweek) %>% 
-  mutate(gi_star = local_gstar_perm(
-    total_count, nb, wt)) %>% 
-  tidyr::unnest(gi_star)
+ehsa = emerging_hotspot_analysis(bos, "total_count", threshold = 0.05)
+```
+
+```{r}
+table(ehsa$classification)
+```
+
+Interestingly, there are 2 regions with no patterns detected.
+More data may need to be collected by Taiwan policy makers for these regions for them to better understand the situation and take the appropriate action.
+These are the two regions:
+
+```{r}
+ehsa[ehsa$classification == "no pattern detected", ]
+```
+
+### **Visualising the distribution of EHSA classes**
+
+```{r}
+#ggplot(data = ehsa, aes(x = classification)) + geom_bar()
+
+g <- ggplot(ehsa, aes(x = classification))  
+p <-  g + geom_bar() + ggtitle("Classifications") +  xlab("Type of Emerging Hotspot") + ylab("Count")
+
+ggplotly(p) 
+```
+
+Lets view the charts here clearly:
+
+![](images/firstPart.png){width="643"}
+
+![](images/secondPart.png){width="624"}
+
+The most common type of hotspot is oscillating hotspot, which indicates most of the regions were experiencing cold spots before they suddenly became infected with dengue.
+This indicates there were less persistent hotspots and the reason for this could be ***lack of awareness and actions taken to prevent dengue*** resulting in the people in that region only taking action once they have started experiencing dengue.
+Thus, the appearance of dengue seems "sudden" and classifies this region as oscillating hotspot.
+Surprisingly there are no persistent hotspots which indicates that all affected regions quickly took actions to reduce the dengue rate and thus allows them to not be statistically significant hot spot for 90 percent of the time-step intervals.
+This is a good sign about the level of awareness for users who have already been infected.
+
+## Reflections
+
+This study has been inspiring for me since it made me think about spatiotemporal relationships on a deep level.
+This is definitely beneficial for me in the future given that there are few tools that allow use to analyse spatiotemporal relationships much less visualise them.
+These spatiotemporal cubes can possibly be used in future applications such as 3D VR applications for non technical policy makers from other industries see these trends better.
+
+```{r}
+#gi_stars <- dengue_nb %>% 
+#  group_by(epiweek) %>% 
+#  mutate(gi_star = local_gstar_perm(
+#    total_count, nb, wt)) %>% 
+#  tidyr::unnest(gi_star)
 
 
 ```
@@ -520,8 +575,8 @@ print("--------------")
 ```
 
 ```{r}
-gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)
-gi_star
+#gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)
+#gi_star
 ```
 
 method 2
@@ -560,3 +615,5 @@ Planning:
 -   <https://r4gdsa.netlify.app/chap04.html>
 
 -   <https://r4gdsa.netlify.app/chap07.html>
+
+-   <https://pro.arcgis.com/en/pro-app/latest/tool-reference/space-time-pattern-mining/learnmoreemerging.htm#:~:text=Oscillating%20Hot%20Spot,been%20statistically%20significant%20hot%20spots.>
