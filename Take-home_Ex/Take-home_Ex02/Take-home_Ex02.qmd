@@ -57,7 +57,6 @@ Dengue_Daily.csv, an aspatial data of reported dengue cases in Taiwan since 1998
 (Source: Dengue Daily Confirmed Cases Since 1998. Below are selected fields that are useful for this study:
 
 發病日: Onset date 最小統計區中心點X: x-coordinate 最小統計區中心點Y: y-coordinate Both data sets have been uploaded on eLearn.
-Students are required to download them from eLearn.
 
 # Getting Started
 
@@ -489,7 +488,7 @@ valid_rows = dplyr::count(bos, epiweek, VILLTOWN)
 head(valid_rows)
 ```
 
-## **Computing Gi\***
+# Computing GI
 
 Lets get the neighbors and inverse distance weights around the region.
 Note that the region itself will be included as a neighbor:
@@ -529,7 +528,7 @@ print( dengue_nb[160, ]$nb)
 #  tidyr::unnest(gi_star)
 ```
 
-## **Global Spatial Autocorrelation**
+# Global Spatial Correlation
 
 ### **Computing Contiguity Spatial Weights**
 
@@ -596,11 +595,11 @@ abline(v=0,
        col="red") 
 ```
 
-## **Global Measures of Spatial Autocorrelation: Geary’s C**
+# Global Measures of Spatial Autocorrelation: Geary's CC
 
-In this section, we will perform Geary’s C statistics testing by using appropriate functions of **spdep** package.
+In this section, we will perform Geary’s C statistics testing by using appropriate functions of spdep package.
 
-### **Computing Monte Carlo Geary’s C**
+**Computing Monte Carlo Geary’s C**
 
 The code chunk below performs permutation test for Geary’s C statistic by using [`geary.mc()`](https://r-spatial.github.io/spdep/reference/geary.mc.html) function.
 
@@ -631,7 +630,7 @@ hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
 abline(v=1, col="red") 
 ```
 
-### **Computing local Moran’s I**
+# Computing local Moran's I
 
 ```{r}
 fips <- order(dengue_df_combined$total_count)
@@ -668,7 +667,7 @@ pvalue.map <- tm_shape(dengue_df_combined.localMI) +
 tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ```
 
-## **Creating a LISA Cluster Map**
+# Creating a LISA Cluster Map
 
 ### **Plotting Moran scatterplot**
 
@@ -768,7 +767,7 @@ There are a significant number of low-low regions which indicates most of these 
 The light blue clusters showing worrying trends since they may be the origination of dengue spots and may influence surrounding regions to get dengue as well.
 Policy makers need to take note of these regions and push for more awareness in these low-high regions in particular.
 
-## **Performing Emerging Hotspot Analysis**
+# Performing Emerging Hotspot Analysis
 
 Lets use the spacetime cube generated to find out trends of how the dengue is spreading.
 This information can be useful for policy makers in taiwan to set up more posters and awareness campaigns to get people in more vulnerable regions to take action to not only reduce dengue onset after it has happened but also encourage them to take preventive measures so it never happens to them as well.
@@ -849,7 +848,7 @@ This is a good sign about the level of awareness for users who have already been
 
 ## Reflections
 
-This study has been inspiring since it makes you think about spatiotemporal relationships on a deep level for identifying patterns over time .
+This study has been inspiring since it makes you think about spatiotemporal relationships on a deep level for identifying patterns over time.
 This is definitely beneficial for me in the future given that there are few tools that allow use to analyse spatiotemporal relationships much less visualise them.
 These spatiotemporal cubes can possibly be used in future applications such as 3D VR applications for non technical policy makers from other industries see these trends better.
 Specifically it shows how important it is for policy makers in charge of controlling the spread of these viruses through campaigns.
