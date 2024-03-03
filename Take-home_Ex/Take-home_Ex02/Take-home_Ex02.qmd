@@ -3,7 +3,7 @@ title: "Take Home Exercise 2"
 author: "Maaruni"
 execute: 
   warning: false
-date: 02/09/2024
+date: 02/16/2024
 editor: 
   markdown: 
     wrap: sentence
@@ -403,6 +403,31 @@ tm_shape(week33) +
   tm_borders()
 ```
 
+Let us try to visualise the data using equal interval and equal quantile classifcations:
+
+```{r}
+equal <- tm_shape(week33) +
+  tm_fill("total_count",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(week33) +
+  tm_fill("total_count",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+```
+
+This shows that the data unevenly distributed with most regions having around 1 dengue case.
+
 Lets create an animation of the changing dengue cases over the 20 weeks.
 
 ```{r}
@@ -428,12 +453,14 @@ tmap_animation(vacrate_anim, filename = "vacrate2.gif", delay = 100, width = 128
 ![](vacrate2.gif)
 
 ```{r}
-dengue_df_combined_withgeometry = dengue_df_combined
-dengue_df_combined = st_drop_geometry(dengue_df_combined)
-head(dengue_df_combined)
+#dengue_df_combined_withgeometry = dengue_df_combined
+#dengue_df_combined = st_drop_geometry(dengue_df_combined)
+#head(dengue_df_combined)
 ```
 
-Lets create a spacetime object
+# **Creating a Time Series Cube**
+
+Let's create a spacetime cube with spacetime() function from sfdep:
 
 ```{r}
 bos = spacetime(dengue_df_combined, taiwan_sf_filtered,
@@ -450,6 +477,8 @@ is_spacetime_cube(bos)
 
 Nice, it it valid with 20 time periods \* 258 regions.
 
+Let us double check the number of observations with this function:
+
 ```{r}
 bos = complete_spacetime_cube(bos)
 head(bos)
@@ -460,7 +489,10 @@ valid_rows = dplyr::count(bos, epiweek, VILLTOWN)
 head(valid_rows)
 ```
 
-Lets get the neighbors and weights around the region.
+## **Computing Gi\***
+
+Lets get the neighbors and inverse distance weights around the region.
+Note that the region itself will be included as a neighbor:
 
 ```{r}
 dengue_nb <- bos %>%
@@ -489,6 +521,253 @@ cat("neighbors of region 160: ")
 print( dengue_nb[160, ]$nb)
 ```
 
+```{r}
+#gi_stars <- dengue_nb %>% 
+#  group_by(epiweek) %>% 
+#  mutate(gi_star = local_gstar_perm(
+#    total_count, nb, wt)) %>% 
+#  tidyr::unnest(gi_star)
+```
+
+## **Global Spatial Autocorrelation**
+
+### **Computing Contiguity Spatial Weights**
+
+Similar to the above method, we can calculate the spatial weights separately for global spatial autocorrelation statistics analysis.
+
+```{r}
+wm_q <- poly2nb(dengue_df_combined, 
+                queen=TRUE)
+summary(wm_q)
+```
+
+The summary report above shows that there are 3082 area units in Taiwan's selected districts.
+There are 19 most connected areas unit has 212 neighbours.
+
+### **Row-standardised weights matrix**
+
+similar to above we can manually assign weights to each neighboring polygon.
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
+
+### **Global Spatial Autocorrelation: Moran’s I**
+
+#### Computing Monte Carlo Moran’s I
+
+A total of 1000 simulation will be performed.
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(dengue_df_combined$total_count, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+### **Visualising Monte Carlo Moran’s I**
+
+We can plot the distribution of the statistical values as a histogram and visualise the results of **Monte Carlo Moran’s I.**
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, 
+     freq=TRUE, 
+     breaks=20, 
+     xlab="Simulated Moran's I")
+abline(v=0, 
+       col="red") 
+```
+
+## **Global Measures of Spatial Autocorrelation: Geary’s C**
+
+In this section, we will perform Geary’s C statistics testing by using appropriate functions of **spdep** package.
+
+### **Computing Monte Carlo Geary’s C**
+
+The code chunk below performs permutation test for Geary’s C statistic by using [`geary.mc()`](https://r-spatial.github.io/spdep/reference/geary.mc.html) function.
+
+```{r}
+set.seed(1234)
+bperm=geary.mc(dengue_df_combined$total_count, 
+               listw=rswm_q, 
+               nsim=999)
+bperm
+```
+
+#### Visualising the Monte Carlo Geary’s C
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+
+### **Computing local Moran’s I**
+
+```{r}
+fips <- order(dengue_df_combined$total_count)
+localMI <- localmoran(dengue_df_combined$total_count, rswm_q)
+head(localMI)
+```
+
+#### Mapping the local Moran’s I
+
+```{r}
+dengue_df_combined.localMI <- cbind(dengue_df_combined,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+#### Mapping both local Moran’s I values and p-values
+
+The choropleth shows on the left is evidence for both positive and negative Ii values.
+However, it is useful to consider the p-values for each of these values, as consider above.
+
+```{r}
+localMI.map <- tm_shape(dengue_df_combined.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue.map <- tm_shape(dengue_df_combined.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
+```
+
+## **Creating a LISA Cluster Map**
+
+### **Plotting Moran scatterplot**
+
+```{r}
+nci <- moran.plot(dengue_df_combined$total_count, rswm_q,
+                  labels=as.character(dengue_df_combined$VILLTOWN), 
+                  xlab="Count of dengue cases 2023", 
+                  ylab="Spatially Lag total count 2023")
+```
+
+The counts are not well distributed here at all since most of them at count of 1 on the far left.
+
+### **Preparing LISA map classes**
+
+The code chunks below show the steps to prepare a LISA cluster map.
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+```
+
+Next, derives the spatially lagged variable of interest (i.e. GDPPC) and centers the spatially lagged variable around its mean.
+
+```{r}
+dengue_df_combined$lag_GDPPC <- lag.listw(rswm_q, dengue_df_combined$total_count)
+DV <- dengue_df_combined$lag_GDPPC - mean(dengue_df_combined$lag_GDPPC)  
+```
+
+This is follow by centering the local Moran’s around the mean.
+
+```{r}
+LM_I <- localMI[,1] - mean(localMI[,1])    
+```
+
+Next, we will set a statistical significance level for the local Moran.
+
+```{r}
+signif <- 0.05    
+```
+
+These four command lines define the low-low (1), low-high (2), high-low (3) and high-high (4) categories.
+
+```{r}
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4    
+```
+
+Lastly, places non-significant Moran in the category 0.
+
+```{r}
+quadrant[localMI[,5]>signif] <- 0
+```
+
+In fact, we can combined all the steps into one single code chunk as shown below:
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+dengue_df_combined$lag_GDPPC <- lag.listw(rswm_q, dengue_df_combined$total_count)
+DV <- dengue_df_combined$lag_GDPPC - mean(dengue_df_combined$lag_GDPPC)     
+LM_I <- localMI[,1]   
+signif <- 0.05       
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4    
+quadrant[localMI[,5]>signif] <- 0
+```
+
+### **Plotting LISA map and** local Moran’s I values
+
+For effective interpretation, it is better to plot both the local Moran’s I values map and LISA map next to each other.
+
+The code chunk below will be used to create such visualisation.
+
+```{r}
+total_count <- qtm(dengue_df_combined, "total_count")
+
+dengue_df_combined.localMI$quadrant <- quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap <- tm_shape(dengue_df_combined.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5)
+
+tmap_arrange(total_count, LISAmap, 
+             asp=1, ncol=2)
+```
+
+There are a significant number of low-low regions which indicates most of these regions are not heavily affected by dengue.
+The light blue clusters showing worrying trends since they may be the origination of dengue spots and may influence surrounding regions to get dengue as well.
+Policy makers need to take note of these regions and push for more awareness in these low-high regions in particular.
+
 ## **Performing Emerging Hotspot Analysis**
 
 Lets use the spacetime cube generated to find out trends of how the dengue is spreading.
@@ -497,6 +776,8 @@ This information can be useful for policy makers in taiwan to set up more poster
 ```{r}
 ehsa = emerging_hotspot_analysis(bos, "total_count", threshold = 0.05)
 ```
+
+Lets look at the distribution of each of these classifications:
 
 ```{r}
 table(ehsa$classification)
@@ -507,12 +788,14 @@ More data may need to be collected by Taiwan policy makers for these regions for
 These are the two regions:
 
 ```{r}
+#| eval: false
 ehsa[ehsa$classification == "no pattern detected", ]
 ```
 
 ### **Visualising the distribution of EHSA classes**
 
 ```{r}
+#| eval: false
 #ggplot(data = ehsa, aes(x = classification)) + geom_bar()
 
 g <- ggplot(ehsa, aes(x = classification))  
@@ -527,7 +810,38 @@ Lets view the charts here clearly:
 
 ![](images/secondPart.png){width="624"}
 
-The most common type of hotspot is oscillating hotspot, which indicates most of the regions were experiencing cold spots before they suddenly became infected with dengue.
+```{r}
+taiwan_sf_filtered
+```
+
+### **Visualising EHSA**
+
+Now, we can add the polygons data from taiwan_sf_filtered to the ehsa analysis and visualise the different types of clusters spatially.
+
+```{r}
+#| eval: false
+taiwan_ehsa <- taiwan_sf_filtered %>%
+  left_join(ehsa , by = join_by(VILLTOWN == location))
+```
+
+Lets plots the map:
+
+```{r}
+#| eval: false
+ehsa_sig <- taiwan_ehsa  %>%
+  filter(p_value < 0.05)
+tmap_mode("plot")
+tm_shape(taiwan_ehsa) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+tm_shape(ehsa_sig) +
+  tm_fill("classification") + 
+  tm_borders(alpha = 0.4)
+```
+
+![](images/Screenshot 2024-03-03 at 11.30.23 PM.png)
+
+The most common type of hotspot is oscillating hotspot (indicated by the red regions), which indicates most of the regions were experiencing cold spots before they suddenly became infected with dengue.
 This indicates there were less persistent hotspots and the reason for this could be ***lack of awareness and actions taken to prevent dengue*** resulting in the people in that region only taking action once they have started experiencing dengue.
 Thus, the appearance of dengue seems "sudden" and classifies this region as oscillating hotspot.
 Surprisingly there are no persistent hotspots which indicates that all affected regions quickly took actions to reduce the dengue rate and thus allows them to not be statistically significant hot spot for 90 percent of the time-step intervals.
@@ -535,21 +849,27 @@ This is a good sign about the level of awareness for users who have already been
 
 ## Reflections
 
-This study has been inspiring for me since it made me think about spatiotemporal relationships on a deep level.
+This study has been inspiring since it makes you think about spatiotemporal relationships on a deep level for identifying patterns over time .
 This is definitely beneficial for me in the future given that there are few tools that allow use to analyse spatiotemporal relationships much less visualise them.
 These spatiotemporal cubes can possibly be used in future applications such as 3D VR applications for non technical policy makers from other industries see these trends better.
+Specifically it shows how important it is for policy makers in charge of controlling the spread of these viruses through campaigns.
+These analysis will allow them to accurately find which regions to target first and invest more to curb the spread more effectively.
 
-```{r}
-#gi_stars <- dengue_nb %>% 
-#  group_by(epiweek) %>% 
-#  mutate(gi_star = local_gstar_perm(
-#    total_count, nb, wt)) %>% 
-#  tidyr::unnest(gi_star)
+## 
 
+# References
 
-```
+-   <https://r4gdsa.netlify.app/chap04.html>
 
-## **Computing Gi\***
+-   <https://r4gdsa.netlify.app/chap07.html>
+
+-   <https://pro.arcgis.com/en/pro-app/latest/tool-reference/space-time-pattern-mining/learnmoreemerging.htm#:~:text=Oscillating%20Hot%20Spot,been%20statistically%20significant%20hot%20spots.>
+
+## Miscellenous
+
+### Other explorations
+
+#### Computing Gi\*
 
 isolating only one week :
 
@@ -578,42 +898,3 @@ print("--------------")
 #gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)
 #gi_star
 ```
-
-method 2
-
-```{r}
-#wm_idw <- dengue_df_combined %>%
-#  mutate(nb = st_contiguity(geometry),
-#         wts = st_inverse_distance(nb, geometry,
-#                                   scale = 1,
-#                                   alpha = 1),
-#         .before = 1)
-```
-
-this might be useful for points that have missing towns:
-
-```         
-left_join(dfx, dfy, join_by(closest(a < b))) # similar to above, but only take the closest match
-```
-
-::: callout-note
-Planning:
-
--   use statistical means to get distribution and see which one best - identify unique patterns and write reflection on them
-
-<!-- -->
-
--   add the cold and hot spots as separate layers for users to interact with
-
--   facet plots
-
--   make ranges for plots similar when comparing plots side by side
-:::
-
-# References
-
--   <https://r4gdsa.netlify.app/chap04.html>
-
--   <https://r4gdsa.netlify.app/chap07.html>
-
--   <https://pro.arcgis.com/en/pro-app/latest/tool-reference/space-time-pattern-mining/learnmoreemerging.htm#:~:text=Oscillating%20Hot%20Spot,been%20statistically%20significant%20hot%20spots.>
