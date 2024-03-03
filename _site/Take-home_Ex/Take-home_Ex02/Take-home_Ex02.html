@@ -153,6 +153,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex-07/Hands-on_Ex07.html">
  <span class="dropdown-text">Hands-on Exercise 7</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex-08/Hands-on_Ex08.html">
+ <span class="dropdown-text">Hands-on Exercise 8</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -188,7 +192,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Take-home Exercise 1</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex02/Take-home_Ex02.html">
+    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex02/Take-home_Ex05.html">
  <span class="dropdown-text">Take-home Exercise 2</span></a>
   </li>  
     </ul>
@@ -252,6 +256,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a>
   <ul class="collapse">
   <li><a href="#data-distribution-for-columns" id="toc-data-distribution-for-columns" class="nav-link" data-scroll-target="#data-distribution-for-columns">Data distribution for columns</a></li>
+  <li><a href="#computing-gi" id="toc-computing-gi" class="nav-link" data-scroll-target="#computing-gi"><strong>Computing Gi*</strong></a></li>
   </ul></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
@@ -322,8 +327,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="data-acquisition">Data Acquisition</h2>
 <table class="table">
 <colgroup>
-<col style="width: 31%">
-<col style="width: 68%">
+<col style="width: 30%">
+<col style="width: 69%">
 </colgroup>
 <tbody>
 <tr class="odd">
@@ -345,7 +350,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="installing-and-loading-packages">Installing and Loading Packages</h2>
 <p>Lets install the relevant R libraries needed using pacman.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr, spacetime)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="setting-important-configurations" class="level3">
 <h3 class="anchored" data-anchor-id="setting-important-configurations">Setting Important Configurations</h3>
@@ -411,7 +416,7 @@ Tip
 <p>Lets filter out all the None values to get valid x and y coordinates. 最小統計區中心點X, 最小統計區中心點Y</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered <span class="ot">&lt;-</span> <span class="fu">filter</span>(dengue_df, 最小統計區中心點X <span class="sc">!=</span> <span class="st">"None"</span> <span class="sc">&amp;</span> 最小統計區中心點Y <span class="sc">!=</span> <span class="st">"None"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <table class="table">
 <tbody>
@@ -423,20 +428,25 @@ Tip
 </tr>
 </tbody>
 </table>
+<p>filter by epiweek 31 to 50 in 2023 - <a href="https://www.cmmcp.org/sites/g/files/vyhlif2966/f/uploads/epiweekcalendar2023.pdf" class="uri">https://www.cmmcp.org/sites/g/files/vyhlif2966/f/uploads/epiweekcalendar2023.pdf</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered<span class="sc">$</span>epiweek <span class="ot">=</span> <span class="fu">epiweek</span>(dengue_df_filtered<span class="sc">$</span>發病日)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>start_date <span class="ot">=</span> <span class="st">"2023-07-30"</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>end_date <span class="ot">=</span> <span class="st">"2023-12-16"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered <span class="ot">=</span> <span class="fu">filter</span>(dengue_df_filtered, 發病日 <span class="sc">&gt;=</span> start_date <span class="sc">&amp;</span> 發病日 <span class="sc">&lt;=</span> end_date)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p>todo: After filtering valid points, lets convert the latitude and longitude from TWD97 to wsg84 as it conforms to google maps and most global standards for easier analysis.</p>
 <!--#  3826 https://epsg.io/transform#s_srs=3826&t_srs=4326&ops=3830&x=NaN&y=NaN -->
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(dengue_df_filtered, </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"最小統計區中心點X"</span>,<span class="st">"最小統計區中心點Y"</span>),</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">3826</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3826</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(dengue_df_filtered[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(dengue_df_filtered, </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"最小統計區中心點X"</span>,<span class="st">"最小統計區中心點Y"</span>),</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">3826</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3826</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'view'</span>)</span>
@@ -453,7 +463,7 @@ Tip
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>filepath <span class="ot">&lt;-</span> <span class="fu">str_interp</span>(<span class="st">"${folderToSave}/dengue_df"</span>)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>dengue_df <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(filepath, <span class="at">refhook =</span> <span class="cn">NULL</span>)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dengue_df </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -461,12 +471,11 @@ Tip
 <section id="analysis" class="level1">
 <h1>Analysis</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)</span>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, sfdep, spNetwork, tmap, classInt, viridis, tidyverse, list, arrow, lubridate, tidyverse, readr, sp, maptools, raster, spatstat, spdep, readr, ggplot2, plotly, hexbin, gganimate, gifski, png, transformr, dplyr)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>folderToSave <span class="ot">&lt;-</span> <span class="st">"/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/rds"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>taiwan_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/takehomeassigment2/geospatial"</span>, <span class="at">layer=</span><span class="st">"TAINAN_VILLAGE"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3826</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>taiwan_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"../../data/takehomeassigment2/geospatial"</span>, <span class="at">layer=</span><span class="st">"TAINAN_VILLAGE"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `TAINAN_VILLAGE' from data source 
   `/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/takehomeassigment2/geospatial' 
@@ -477,63 +486,54 @@ Dimension:     XY
 Bounding box:  xmin: 120.0269 ymin: 22.88751 xmax: 120.6563 ymax: 23.41374
 Geodetic CRS:  TWD97</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>taiwan_sf</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(taiwan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Simple feature collection with 649 features and 10 fields
+<pre><code>Simple feature collection with 6 features and 10 fields
 Geometry type: POLYGON
 Dimension:     XY
-Bounding box:  xmin: 150292.5 ymin: 2531973 xmax: 214819.9 ymax: 2590210
-Projected CRS: TWD97 / TM2 zone 121
-First 10 features:
-      VILLCODE COUNTYNAME TOWNNAME VILLNAME        VILLENG COUNTYID COUNTYCODE
-1  67000280002     臺南市   歸仁區   六甲里    Liujia Vil.        D      67000
-2  67000350032     臺南市   安南區   青草里   Qingcao Vil.        D      67000
-3  67000150009     臺南市   七股區   溪南里     Xinan Vil.        D      67000
-4  67000150010     臺南市   七股區   七股里      Qigu Vil.        D      67000
-5  67000150008     臺南市   七股區   龍山里  Longshan Vil.        D      67000
-6  67000150017     臺南市   七股區   中寮里 Zhongliao Vil.        D      67000
-7  67000150004     臺南市   七股區   篤加里     Dujia Vil.        D      67000
-8  67000150007     臺南市   七股區   塩埕里 Yancheng  Vil.        D      67000
-9  67000150022     臺南市   七股區   三股里     Sangu Vil.        D      67000
-10 67000150023     臺南市   七股區   十份里    Shifen Vil.        D      67000
-   TOWNID TOWNCODE NOTE                       geometry
-1     D33 67000280 &lt;NA&gt; POLYGON ((175398.2 2539893,...
-2     D06 67000350 &lt;NA&gt; POLYGON ((159595.3 2553843,...
-3     D22 67000150 &lt;NA&gt; POLYGON ((159982.8 2559559,...
-4     D22 67000150 &lt;NA&gt; POLYGON ((161027.5 2559729,...
-5     D22 67000150 &lt;NA&gt; POLYGON ((156237.9 2559530,...
-6     D22 67000150 &lt;NA&gt; POLYGON ((160519 2563284, 1...
-7     D22 67000150 &lt;NA&gt; POLYGON ((163836.7 2561558,...
-8     D22 67000150 &lt;NA&gt; POLYGON ((154124 2563492, 1...
-9     D22 67000150 &lt;NA&gt; POLYGON ((151891.2 2557389,...
-10    D22 67000150 &lt;NA&gt; POLYGON ((159855.9 2554924,...</code></pre>
+Bounding box:  xmin: 120.053 ymin: 22.93251 xmax: 120.2905 ymax: 23.16919
+Geodetic CRS:  TWD97
+     VILLCODE COUNTYNAME TOWNNAME VILLNAME        VILLENG COUNTYID COUNTYCODE
+1 67000280002     臺南市   歸仁區   六甲里    Liujia Vil.        D      67000
+2 67000350032     臺南市   安南區   青草里   Qingcao Vil.        D      67000
+3 67000150009     臺南市   七股區   溪南里     Xinan Vil.        D      67000
+4 67000150010     臺南市   七股區   七股里      Qigu Vil.        D      67000
+5 67000150008     臺南市   七股區   龍山里  Longshan Vil.        D      67000
+6 67000150017     臺南市   七股區   中寮里 Zhongliao Vil.        D      67000
+  TOWNID TOWNCODE NOTE                       geometry
+1    D33 67000280 &lt;NA&gt; POLYGON ((120.2725 22.95868...
+2    D06 67000350 &lt;NA&gt; POLYGON ((120.1176 23.08387...
+3    D22 67000150 &lt;NA&gt; POLYGON ((120.121 23.1355, ...
+4    D22 67000150 &lt;NA&gt; POLYGON ((120.1312 23.1371,...
+5    D22 67000150 &lt;NA&gt; POLYGON ((120.0845 23.13503...
+6    D22 67000150 &lt;NA&gt; POLYGON ((120.126 23.16917,...</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>filepath <span class="ot">&lt;-</span> <span class="fu">str_interp</span>(<span class="st">"${folderToSave}/dengue_df"</span>)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>dengue_df <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(filepath, <span class="at">refhook =</span> <span class="cn">NULL</span>)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>dengue_df </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 106,081 × 26
-   發病日     個案研判日 通報日     性別  年齡層 居住縣市 居住鄉鎮 居住村里
-   &lt;date&gt;     &lt;chr&gt;      &lt;date&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
- 1 1998-01-02 None       1998-01-07 男    40-44  屏東縣   屏東市   None    
- 2 1998-01-03 None       1998-01-14 男    30-34  屏東縣   東港鎮   None    
- 3 1998-01-13 None       1998-02-18 男    55-59  宜蘭縣   宜蘭市   None    
- 4 1998-01-15 None       1998-01-23 男    35-39  高雄市   苓雅區   None    
- 5 1998-01-20 None       1998-02-04 男    55-59  宜蘭縣   五結鄉   None    
- 6 1998-01-23 None       1998-02-02 男    40-44  新北市   新店區   None    
- 7 1998-01-26 None       1998-02-19 女    65-69  台北市   北投區   None    
- 8 1998-02-11 None       1998-02-13 女    25-29  台南市   南區     None    
- 9 1998-02-16 None       1998-02-24 男    20-24  高雄市   楠梓區   None    
-10 1998-02-17 None       1998-02-23 女    30-34  高雄市   鳳山區   None    
-# ℹ 106,071 more rows
-# ℹ 18 more variables: 最小統計區 &lt;chr&gt;, 最小統計區中心點X &lt;chr&gt;,
-#   最小統計區中心點Y &lt;chr&gt;, 一級統計區 &lt;chr&gt;, 二級統計區 &lt;chr&gt;,
+<pre><code>Simple feature collection with 6 features and 25 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 120.218 ymin: 22.97608 xmax: 120.2465 ymax: 23.01932
+Projected CRS: TWD97 / TM2 zone 121
+# A tibble: 6 × 26
+  發病日     個案研判日 通報日     性別  年齡層 居住縣市 居住鄉鎮 居住村里
+  &lt;date&gt;     &lt;chr&gt;      &lt;date&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
+1 2023-07-30 2023/07/31 2023-07-31 女    65-69  台南市   東區     忠孝里  
+2 2023-07-30 2023/07/31 2023-07-31 男    70+    台南市   東區     德光里  
+3 2023-07-30 2023/07/31 2023-07-31 女    50-54  台南市   永康區   五王里  
+4 2023-07-30 2023/07/31 2023-07-31 女    15-19  台南市   永康區   二王里  
+5 2023-07-30 2023/07/31 2023-07-31 女    15-19  台南市   永康區   二王里  
+6 2023-07-30 2023/08/02 2023-08-02 男    50-54  台南市   永康區   安康里  
+# ℹ 18 more variables: 最小統計區 &lt;chr&gt;, 一級統計區 &lt;chr&gt;, 二級統計區 &lt;chr&gt;,
 #   感染縣市 &lt;chr&gt;, 感染鄉鎮 &lt;chr&gt;, 感染村里 &lt;chr&gt;, 是否境外移入 &lt;chr&gt;,
 #   感染國家 &lt;chr&gt;, 確定病例數 &lt;dbl&gt;, 居住村里代碼 &lt;chr&gt;, 感染村里代碼 &lt;chr&gt;,
 #   血清型 &lt;chr&gt;, 內政部居住縣市代碼 &lt;chr&gt;, 內政部居住鄉鎮代碼 &lt;chr&gt;,
-#   內政部感染縣市代碼 &lt;chr&gt;, 內政部感染鄉鎮代碼 &lt;chr&gt;</code></pre>
+#   內政部感染縣市代碼 &lt;chr&gt;, 內政部感染鄉鎮代碼 &lt;chr&gt;, epiweek &lt;dbl&gt;,
+#   geometry &lt;POINT [m]&gt;</code></pre>
 </div>
 </div>
 <p>Columns in dengue_df:</p>
@@ -543,66 +543,71 @@ First 10 features:
 <pre><code> [1] "發病日"             "個案研判日"         "通報日"            
  [4] "性別"               "年齡層"             "居住縣市"          
  [7] "居住鄉鎮"           "居住村里"           "最小統計區"        
-[10] "最小統計區中心點X"  "最小統計區中心點Y"  "一級統計區"        
-[13] "二級統計區"         "感染縣市"           "感染鄉鎮"          
-[16] "感染村里"           "是否境外移入"       "感染國家"          
-[19] "確定病例數"         "居住村里代碼"       "感染村里代碼"      
-[22] "血清型"             "內政部居住縣市代碼" "內政部居住鄉鎮代碼"
-[25] "內政部感染縣市代碼" "內政部感染鄉鎮代碼"</code></pre>
+[10] "一級統計區"         "二級統計區"         "感染縣市"          
+[13] "感染鄉鎮"           "感染村里"           "是否境外移入"      
+[16] "感染國家"           "確定病例數"         "居住村里代碼"      
+[19] "感染村里代碼"       "血清型"             "內政部居住縣市代碼"
+[22] "內政部居住鄉鎮代碼" "內政部感染縣市代碼" "內政部感染鄉鎮代碼"
+[25] "epiweek"            "geometry"          </code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#感染縣市</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">1</span>] <span class="ot">=</span> <span class="st">"Day_of_onset"</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">2</span>] <span class="ot">=</span> <span class="st">"Day_of_judgement"</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">3</span>] <span class="ot">=</span> <span class="st">"Day_of_report"</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">4</span>] <span class="ot">=</span> <span class="st">"Gender"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">5</span>] <span class="ot">=</span> <span class="st">"Age_group"</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">6</span>] <span class="ot">=</span> <span class="st">"County_and_city_of_residence"</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">7</span>] <span class="ot">=</span> <span class="st">"TOWNNAME"</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">8</span>] <span class="ot">=</span> <span class="st">"VILLNAME"</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">9</span>] <span class="ot">=</span> <span class="st">"Minimum_statistical_area"</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">10</span>] <span class="ot">=</span> <span class="st">"First_level_statistical_area"</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">11</span>] <span class="ot">=</span> <span class="st">"Secondary_level_statistical_area"</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">12</span>] <span class="ot">=</span> <span class="st">"Infected_counties_and_cities"</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">13</span>] <span class="ot">=</span> <span class="st">"Infected_towns"</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">14</span>] <span class="ot">=</span> <span class="st">"Infect_the_village"</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">15</span>] <span class="ot">=</span> <span class="st">"Whether_to_immigrate_from_abroad"</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">16</span>] <span class="ot">=</span> <span class="st">"Infected_countries"</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">17</span>] <span class="ot">=</span> <span class="st">"Number_of_cases"</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">18</span>] <span class="ot">=</span> <span class="st">"Residential_village_code"</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">19</span>] <span class="ot">=</span> <span class="st">"Infected_Village_Code"</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">20</span>] <span class="ot">=</span> <span class="st">"Serotype"</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">21</span>] <span class="ot">=</span> <span class="st">"Ministry_of_Interior_county"</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">22</span>] <span class="ot">=</span> <span class="st">"Home_Office_Township_Code_of_Residence"</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">23</span>] <span class="ot">=</span> <span class="st">"Ministry_of_Interior"</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df)[<span class="dv">24</span>] <span class="ot">=</span> <span class="st">"Home_Office_Infection_Township_Code"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="data-distribution-for-columns" class="level2">
 <h2 class="anchored" data-anchor-id="data-distribution-for-columns">Data distribution for columns</h2>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Age</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false"><strong>感染縣市</strong></a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Age</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Infected_counties_and_cities</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dengue_df_2, <span class="fu">aes</span>(年齡層))  </span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span>  g <span class="sc">+</span> <span class="fu">geom_bar</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Count of Entries by Age"</span>) <span class="sc">+</span>  <span class="fu">xlab</span>(<span class="st">"Age"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Count"</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dengue_df_2, <span class="fu">aes</span>(年齡層))  </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span>  g <span class="sc">+</span> <span class="fu">geom_bar</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Count of Entries by Age"</span>) <span class="sc">+</span>  <span class="fu">xlab</span>(<span class="st">"Age"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Count"</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dengue_df, <span class="fu">aes</span>(感染縣市))  </span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span>  g <span class="sc">+</span> <span class="fu">geom_bar</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Count of Entries by 感染縣市"</span>) <span class="sc">+</span>  <span class="fu">xlab</span>(<span class="st">"感染縣市"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Count"</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p) </span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dengue_df, <span class="fu">aes</span>(Infected_counties_and_cities))  </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span>  g <span class="sc">+</span> <span class="fu">geom_bar</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Count of Entries by 感染縣市"</span>) <span class="sc">+</span>  <span class="fu">xlab</span>(<span class="st">"Infected_counties_and_cities"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Count"</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p) </span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><br>
 </p>
 </div>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dengue_df_2 <span class="ot">&lt;-</span> dengue_df[<span class="fu">order</span>(dengue_df<span class="sc">$</span>年齡層, <span class="at">decreasing =</span> <span class="cn">TRUE</span>),]</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>dengue_df_2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 106,081 × 26
-   發病日     個案研判日 通報日     性別  年齡層 居住縣市 居住鄉鎮 居住村里
-   &lt;date&gt;     &lt;chr&gt;      &lt;date&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
- 1 1998-09-06 None       1998-09-14 女    70+    新北市   永和區   None    
- 2 1998-09-12 None       1998-09-19 女    70+    彰化縣   彰化市   None    
- 3 1998-10-03 None       1998-10-09 男    70+    台北市   北投區   None    
- 4 1998-10-09 None       1998-10-22 男    70+    高雄市   左營區   None    
- 5 1998-11-08 None       1998-11-20 男    70+    台南市   中西區   None    
- 6 1998-11-21 None       1998-11-30 男    70+    台南市   中西區   None    
- 7 1998-11-29 None       1998-12-02 女    70+    台南市   中西區   None    
- 8 1998-11-30 None       1998-11-30 男    70+    台南市   北區     None    
- 9 1998-12-07 None       1998-12-11 男    70+    台南市   中西區   None    
-10 1998-12-19 None       1998-12-22 男    70+    台南市   中西區   None    
-# ℹ 106,071 more rows
-# ℹ 18 more variables: 最小統計區 &lt;chr&gt;, 最小統計區中心點X &lt;chr&gt;,
-#   最小統計區中心點Y &lt;chr&gt;, 一級統計區 &lt;chr&gt;, 二級統計區 &lt;chr&gt;,
-#   感染縣市 &lt;chr&gt;, 感染鄉鎮 &lt;chr&gt;, 感染村里 &lt;chr&gt;, 是否境外移入 &lt;chr&gt;,
-#   感染國家 &lt;chr&gt;, 確定病例數 &lt;dbl&gt;, 居住村里代碼 &lt;chr&gt;, 感染村里代碼 &lt;chr&gt;,
-#   血清型 &lt;chr&gt;, 內政部居住縣市代碼 &lt;chr&gt;, 內政部居住鄉鎮代碼 &lt;chr&gt;,
-#   內政部感染縣市代碼 &lt;chr&gt;, 內政部感染鄉鎮代碼 &lt;chr&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -612,157 +617,640 @@ First 10 features:
 <p>only need county codes:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>taiwan_sf_filtered <span class="ot">&lt;-</span> <span class="fu">filter</span>(taiwan_sf, TOWNID <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">'D01'</span>, <span class="st">'D02'</span>, <span class="st">'D04'</span>, <span class="st">'D06'</span>, <span class="st">'D07'</span>, <span class="st">'D08'</span>, <span class="st">'D32'</span>, <span class="st">'D39'</span>))</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>taiwan_sf_filtered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(taiwan_sf_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Simple feature collection with 258 features and 10 fields
+<pre><code>Simple feature collection with 6 features and 10 fields
 Geometry type: POLYGON
 Dimension:     XY
-Bounding box:  xmin: 153939.6 ymin: 2532739 xmax: 177479.4 ymax: 2554660
-Projected CRS: TWD97 / TM2 zone 121
-First 10 features:
-      VILLCODE COUNTYNAME TOWNNAME VILLNAME       VILLENG COUNTYID COUNTYCODE
-1  67000350032     臺南市   安南區   青草里  Qingcao Vil.        D      67000
-2  67000270011     臺南市   仁德區   保安里   Bao'an Vil.        D      67000
-3  67000370005     臺南市   中西區   赤嵌里  Chihkan Vil.        D      67000
-4  67000330004     臺南市     南區   大成里  Dacheng Vil.        D      67000
-5  67000350028     臺南市   安南區   城北里 Chengbei Vil.        D      67000
-6  67000350030     臺南市   安南區   城南里 Chengnan Vil.        D      67000
-7  67000370009     臺南市   中西區   法華里    Fahua Vil.        D      67000
-8  67000350017     臺南市   安南區   海南里   Hainan Vil.        D      67000
-9  67000350049     臺南市   安南區   國安里   Guo'an Vil.        D      67000
-10 67000350018     臺南市   安南區   溪心里    Xixin Vil.        D      67000
-   TOWNID TOWNCODE NOTE                       geometry
-1     D06 67000350 &lt;NA&gt; POLYGON ((159595.3 2553843,...
-2     D32 67000270 &lt;NA&gt; POLYGON ((171071 2537340, 1...
-3     D08 67000370 &lt;NA&gt; POLYGON ((168116.2 2544469,...
-4     D02 67000330 &lt;NA&gt; POLYGON ((167828.3 2542456,...
-5     D06 67000350 &lt;NA&gt; POLYGON ((160772.3 2551760,...
-6     D06 67000350 &lt;NA&gt; POLYGON ((160304 2552197, 1...
-7     D08 67000370 &lt;NA&gt; POLYGON ((168942.9 2542787,...
-8     D06 67000350 &lt;NA&gt; POLYGON ((165436 2546977, 1...
-9     D06 67000350 &lt;NA&gt; POLYGON ((166628.4 2547577,...
-10    D06 67000350 &lt;NA&gt; POLYGON ((166326.6 2551256,...</code></pre>
+Bounding box:  xmin: 120.0936 ymin: 22.9156 xmax: 120.2585 ymax: 23.08827
+Geodetic CRS:  TWD97
+     VILLCODE COUNTYNAME TOWNNAME VILLNAME       VILLENG COUNTYID COUNTYCODE
+1 67000350032     臺南市   安南區   青草里  Qingcao Vil.        D      67000
+2 67000270011     臺南市   仁德區   保安里   Bao'an Vil.        D      67000
+3 67000370005     臺南市   中西區   赤嵌里  Chihkan Vil.        D      67000
+4 67000330004     臺南市     南區   大成里  Dacheng Vil.        D      67000
+5 67000350028     臺南市   安南區   城北里 Chengbei Vil.        D      67000
+6 67000350030     臺南市   安南區   城南里 Chengnan Vil.        D      67000
+  TOWNID TOWNCODE NOTE                       geometry
+1    D06 67000350 &lt;NA&gt; POLYGON ((120.1176 23.08387...
+2    D32 67000270 &lt;NA&gt; POLYGON ((120.2304 22.93544...
+3    D08 67000370 &lt;NA&gt; POLYGON ((120.2012 22.99966...
+4    D02 67000330 &lt;NA&gt; POLYGON ((120.1985 22.98147...
+5    D06 67000350 &lt;NA&gt; POLYGON ((120.1292 23.06512...
+6    D06 67000350 &lt;NA&gt; POLYGON ((120.1246 23.06904...</code></pre>
 </div>
+</div>
+<p>recode chinese column names to enlgish</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(taiwan_sf_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "VILLCODE"   "COUNTYNAME" "TOWNNAME"   "VILLNAME"   "VILLENG"   
+ [6] "COUNTYID"   "COUNTYCODE" "TOWNID"     "TOWNCODE"   "NOTE"      
+[11] "geometry"  </code></pre>
+</div>
+</div>
+<p>group by village town and week to get the count according to week and region</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>dengue_df_count <span class="ot">=</span> dengue_df <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(VILLNAME, TOWNNAME, epiweek) <span class="sc">%&gt;%</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_count =</span> <span class="fu">n</span>())</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>dengue_df_count <span class="ot">=</span> <span class="fu">st_drop_geometry</span>(dengue_df_count)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+# Groups:   VILLNAME, TOWNNAME [2]
+  VILLNAME TOWNNAME epiweek total_count
+  &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt;       &lt;int&gt;
+1 None     三峽區        40           1
+2 None     下營區        36           1
+3 None     下營區        38           1
+4 None     下營區        40           2
+5 None     下營區        42           1
+6 None     下營區        45           1</code></pre>
+</div>
+</div>
+<p>maybe can save here:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>dengue_df_count<span class="sc">$</span>VILLTOWN <span class="ot">=</span> <span class="fu">paste</span>(dengue_df_count<span class="sc">$</span>VILLNAME, dengue_df_count<span class="sc">$</span>TOWNNAME)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>taiwan_sf_filtered<span class="sc">$</span>VILLTOWN <span class="ot">=</span> <span class="fu">paste</span>(taiwan_sf_filtered<span class="sc">$</span>VILLNAME, taiwan_sf_filtered<span class="sc">$</span>TOWNNAME)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>taiwan_s <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(taiwan_sf_filtered)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>taiwan_sp <span class="ot">&lt;-</span> <span class="fu">as</span>(taiwan_s, <span class="st">"SpatialPolygons"</span>)</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>taiwan_owin <span class="ot">&lt;-</span> <span class="fu">as</span>(taiwan_sp, <span class="st">"owin"</span>)</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(taiwan_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>dengue_df_count2 <span class="ot">=</span> dengue_df_count <span class="sc">%&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">3</span>,<span class="dv">4</span>, <span class="dv">5</span>) </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df_count2)[<span class="dv">1</span>] <span class="ot">=</span> <span class="st">"epiweek"</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_count2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  epiweek total_count VILLTOWN   
+    &lt;dbl&gt;       &lt;int&gt; &lt;chr&gt;      
+1      40           1 None 三峽區
+2      36           1 None 下營區
+3      38           1 None 下營區
+4      40           2 None 下營區
+5      42           1 None 下營區
+6      45           1 None 下營區</code></pre>
+</div>
+</div>
+<p>Before adding in entries for missing observations in taiwan sf, lets observe how it initially looks like:</p>
+<p><img src="vacrate.gif" class="img-fluid"></p>
+<p>As we can see there are many missing regions with no observations according to dengue_df. We need to creating empty observations with count 0 so that we are able to create the spacetime cube later for spatiotemporal analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">#dengue_df_distribution</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="co">#dengue_df_combined</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="co">#for each town check if the week exists is not then add row for that week for that reach with count 0 </span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="co"># VILLTOWN epiweek total_count                       geometry</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>total_invalids <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(taiwan_sf_filtered))</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>  region <span class="ot">=</span> taiwan_sf_filtered<span class="sc">$</span>VILLTOWN[i]</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("region: ", region)</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">31</span><span class="sc">:</span><span class="dv">50</span>){</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">nrow</span>(dengue_df_count2[dengue_df_count2<span class="sc">$</span>epiweek <span class="sc">==</span> j <span class="sc">&amp;</span> dengue_df_count2<span class="sc">$</span>VILLTOWN <span class="sc">==</span> region, ]) <span class="sc">==</span> <span class="dv">0</span>){</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>    matching_week_region <span class="ot">=</span> <span class="fu">c</span>(<span class="at">epiweek =</span> j, <span class="at">total_count =</span> <span class="dv">0</span>, <span class="at">VILLTOWN =</span> region)</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>    dengue_df_count2 <span class="ot">=</span> <span class="fu">rbind</span>(dengue_df_count2,matching_week_region) </span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>    total_invalids <span class="ot">=</span> total_invalids <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">#print(total_invalids)</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(total_invalids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2111</code></pre>
+</div>
+</div>
+<p>left join to aspatial data to add the attributes of aspatial to regions</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>dengue_df_combined <span class="ot">=</span> <span class="fu">left_join</span>(taiwan_sf_filtered, dengue_df_count2)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>dengue_df_combined <span class="ot">&lt;-</span> dengue_df_combined <span class="sc">%&gt;%</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">11</span>, <span class="dv">12</span>, <span class="dv">13</span>)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(dengue_df_combined)[<span class="dv">2</span>] <span class="ot">=</span> <span class="st">"epiweek"</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_combined)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 6 features and 3 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 120.0936 ymin: 23.05871 xmax: 120.1185 ymax: 23.08827
+Geodetic CRS:  TWD97
+       VILLTOWN epiweek total_count                       geometry
+1 青草里 安南區      37           1 POLYGON ((120.1176 23.08387...
+2 青草里 安南區      41           1 POLYGON ((120.1176 23.08387...
+3 青草里 安南區      31           0 POLYGON ((120.1176 23.08387...
+4 青草里 安南區      32           0 POLYGON ((120.1176 23.08387...
+5 青草里 安南區      33           0 POLYGON ((120.1176 23.08387...
+6 青草里 安南區      34           0 POLYGON ((120.1176 23.08387...</code></pre>
+</div>
+</div>
+<p>dont run this</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>dengue_df_distribution <span class="ot">=</span> dengue_df_combined <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(VILLTOWN) <span class="sc">%&gt;%</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_count_weeks =</span> <span class="fu">n</span>())</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>dengue_df_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 258 features and 2 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 120.0627 ymin: 22.89401 xmax: 120.2925 ymax: 23.09144
+Geodetic CRS:  TWD97
+# A tibble: 258 × 3
+   VILLTOWN      total_count_weeks                                      geometry
+   &lt;chr&gt;                     &lt;int&gt;                                 &lt;POLYGON [°]&gt;
+ 1 一甲里 仁德區                20 ((120.2492 22.98265, 120.2492 22.98244, 120.…
+ 2 三合里 永康區                20 ((120.2376 23.01428, 120.2375 23.01427, 120.…
+ 3 三民里 永康區                20 ((120.248 23.06765, 120.248 23.06758, 120.24…
+ 4 上崙里 仁德區                20 ((120.2701 22.94841, 120.2684 22.94632, 120.…
+ 5 中樓里 北區                  20 ((120.2185 23.00673, 120.2184 23.00671, 120.…
+ 6 中洲里 仁德區                20 ((120.2667 22.92651, 120.2667 22.9265, 120.2…
+ 7 中興里 永康區                20 ((120.2417 23.00886, 120.2416 23.00883, 120.…
+ 8 中華里 永康區                20 ((120.24 23.00211, 120.2397 23.00211, 120.23…
+ 9 中西里 東區                  20 ((120.2178 22.99238, 120.2178 22.99235, 120.…
+10 二王里 永康區                20 ((120.25 23.02224, 120.2499 23.02222, 120.24…
+# ℹ 248 more rows</code></pre>
+</div>
+</div>
+<p>Plotting distributions of all the ???</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>week33 <span class="ot">=</span> dengue_df_combined[dengue_df_combined<span class="sc">$</span>epiweek <span class="sc">==</span> <span class="dv">33</span>, ]</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co">#week33</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(week33) <span class="sc">+</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"total_count"</span>) <span class="sc">+</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">#dengue_df</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co">#dengue_df_filtered</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>dengue_df_filtered <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(dengue_df, </span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"最小統計區中心點X"</span>,<span class="st">"最小統計區中心點Y"</span>),</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">3826</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3826</span>)</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 106,081
-Columns: 25
-$ 發病日             &lt;date&gt; 1998-01-02, 1998-01-03, 1998-01-13, 1998-01-15, 19…
-$ 個案研判日         &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 通報日             &lt;date&gt; 1998-01-07, 1998-01-14, 1998-02-18, 1998-01-23, 19…
-$ 性別               &lt;chr&gt; "男", "男", "男", "男", "男", "男", "女", "女", "男…
-$ 年齡層             &lt;chr&gt; "40-44", "30-34", "55-59", "35-39", "55-59", "40-44…
-$ 居住縣市           &lt;chr&gt; "屏東縣", "屏東縣", "宜蘭縣", "高雄市", "宜蘭縣", "…
-$ 居住鄉鎮           &lt;chr&gt; "屏東市", "東港鎮", "宜蘭市", "苓雅區", "五結鄉", "…
-$ 居住村里           &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 最小統計區         &lt;chr&gt; "A1320-0136-00", "A1303-0150-00", "A0201-0449-00", …
-$ 一級統計區         &lt;chr&gt; "A1320-04-008", "A1303-09-007", "A0201-23-006", "A6…
-$ 二級統計區         &lt;chr&gt; "A1320-04", "A1303-09", "A0201-23", "A6408-10", "A0…
-$ 感染縣市           &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 感染鄉鎮           &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 感染村里           &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 是否境外移入       &lt;chr&gt; "否", "是", "是", "否", "否", "否", "否", "是", "是…
-$ 感染國家           &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 確定病例數         &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-$ 居住村里代碼       &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 感染村里代碼       &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 血清型             &lt;chr&gt; "None", "第二型", "None", "None", "None", "None", "…
-$ 內政部居住縣市代碼 &lt;chr&gt; "10013", "10013", "10002", "64", "10002", "65", "63…
-$ 內政部居住鄉鎮代碼 &lt;chr&gt; "1001301", "1001303", "1000201", "6400800", "100020…
-$ 內政部感染縣市代碼 &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ 內政部感染鄉鎮代碼 &lt;chr&gt; "None", "None", "None", "None", "None", "None", "No…
-$ geometry           &lt;POINT [m]&gt; POINT (120.5059 22.46421), POINT (120.4537 22…</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>vacrate_anim <span class="ot">&lt;-</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(dengue_df_combined) <span class="sc">+</span> <span class="fu">tm_fill</span>(<span class="st">"total_count"</span>,</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">palette =</span> <span class="st">"Greens"</span>) <span class="sc">+</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tm_borders</span>(<span class="at">lwd =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_facets</span>(<span class="at">along =</span> <span class="st">"epiweek"</span>, <span class="at">free.coords =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dengue_df_spatial_object <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(dengue_df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>dengue_sp <span class="ot">&lt;-</span> <span class="fu">as</span>(dengue_df_spatial_object, <span class="st">"SpatialPoints"</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>dengue_sp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>class       : SpatialPoints 
-features    : 106081 
-extent      : 118.3081, 121.9826, 21.92574, 26.15617  (xmin, xmax, ymin, ymax)
-crs         : +proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dengue_ppp <span class="ot">&lt;-</span> <span class="fu">as</span>(dengue_sp, <span class="st">"ppp"</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>dengue_ppp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Planar point pattern: 106081 points
-window: rectangle = [118.30809, 121.98257] x [21.92574, 26.156166] units</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dengue_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>vacrate_anim</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>========</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-7.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-8.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-9.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-10.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-11.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-12.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-13.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-14.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-15.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-16.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-17.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-18.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-19.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-20.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dengue_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_animation</span>(vacrate_anim, <span class="at">filename =</span> <span class="st">"vacrate2.gif"</span>, <span class="at">delay =</span> <span class="dv">100</span>, <span class="at">width =</span> <span class="dv">1280</span>, <span class="at">height =</span> <span class="dv">720</span>, <span class="at">scale =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Planar point pattern:  106081 points
-Average intensity 6824.295 points per square unit
-
-*Pattern contains duplicated points*
-
-Coordinates are given to 6 decimal places
-
-Window: rectangle = [118.30809, 121.98257] x [21.92574, 26.156166] units
-                    (3.674 x 4.23 units)
-Window area = 15.5446 square units</code></pre>
+<pre><code>Creating frames</code></pre>
 </div>
-</div>
-<p>If we want to know how many locations have more than one point event, we can use the code chunk below.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>duplicate_counts <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">multiplicity</span>(dengue_ppp) <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>duplicate_counts</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 97310</code></pre>
+<pre><code>========</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>====</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Creating animation
+Animation saved to /Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/Take-home_Ex/Take-home_Ex02/vacrate2.gif </code></pre>
+</div>
+</div>
+<p><img src="vacrate2.gif" class="img-fluid"></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>dengue_df_combined_withgeometry <span class="ot">=</span> dengue_df_combined</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>dengue_df_combined <span class="ot">=</span> <span class="fu">st_drop_geometry</span>(dengue_df_combined)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_combined)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       VILLTOWN epiweek total_count
+1 青草里 安南區      37           1
+2 青草里 安南區      41           1
+3 青草里 安南區      31           0
+4 青草里 安南區      32           0
+5 青草里 安南區      33           0
+6 青草里 安南區      34           0</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">#plotting to be done on AWS EC2 due to low computing power</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_mode('view')</span></span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="co">#tm_shape(dengue_df_filtered) +</span></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  tm_dots(alpha=0.4, </span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="co">#          size=0.05)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>dengue_df_combined[<span class="st">'epiweek'</span>] <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">unlist</span>(dengue_df_combined[<span class="st">'epiweek'</span>]))</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>dengue_df_combined[<span class="st">'total_count'</span>] <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">unlist</span>(dengue_df_combined[<span class="st">'total_count'</span>]))</span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_df_combined)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       VILLTOWN epiweek total_count
+1 青草里 安南區      37           1
+2 青草里 安南區      41           1
+3 青草里 安南區      31           0
+4 青草里 安南區      32           0
+5 青草里 安南區      33           0
+6 青草里 安南區      34           0</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>dengueTAIWAN_ppp <span class="ot">=</span> dengue_ppp[taiwan_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>bos <span class="ot">=</span> <span class="fu">spacetime</span>(dengue_df_combined, taiwan_sf_filtered,</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">.loc_col =</span> <span class="st">"VILLTOWN"</span>,</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">.time_col =</span> <span class="st">"epiweek"</span>)</span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(bos)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       VILLTOWN epiweek total_count
+1 青草里 安南區      37           1
+2 青草里 安南區      41           1
+3 青草里 安南區      31           0
+4 青草里 安南區      32           0
+5 青草里 安南區      33           0
+6 青草里 安南區      34           0</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co">#plotting to be done on AWS EC2 due to low computing power</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="co">#plot(dengueTAIWAN_ppp)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">is_spacetime_cube</span>(bos)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
 </div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>dengue_nb <span class="ot">&lt;-</span> bos <span class="sc">%&gt;%</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">activate</span>(<span class="st">"geometry"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nb =</span> <span class="fu">include_self</span>(<span class="fu">st_contiguity</span>(geometry)),</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">wt =</span> <span class="fu">st_inverse_distance</span>(nb, geometry,</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">scale =</span> <span class="dv">1</span>,</span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">alpha =</span> <span class="dv">1</span>),</span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">.before =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_nbs</span>(<span class="st">"nb"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_wts</span>(<span class="st">"wt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         VILLTOWN epiweek total_count                                      nb
+3   青草里 安南區      31           0                          1, 6, 118, 160
+21  保安里 仁德區      31           1              2, 126, 128, 138, 168, 222
+56  赤嵌里 中西區      31           0 3, 68, 69, 172, 181, 184, 185, 188, 200
+72    大成里 南區      31           0           4, 94, 97, 100, 104, 182, 207
+82  城北里 安南區      31           0                     5, 12, 13, 249, 255
+108 城南里 安南區      31           0        1, 6, 12, 13, 118, 160, 165, 249
+                                                                                                   wt
+3                                                          0.0000000, 0.3730707, 0.5166453, 0.3002859
+21                                   0.0000000, 0.3310971, 0.4857231, 0.3966444, 0.7717933, 0.8772257
+56  0.0000000, 1.2234810, 1.5459306, 1.9097265, 0.9553393, 1.1311669, 1.3578115, 2.7653647, 1.7002092
+72                               0.000000, 1.286031, 2.993138, 1.862438, 2.166602, 1.013777, 1.011906
+82                                              0.0000000, 1.4041477, 1.1310013, 0.6159622, 0.4135746
+108            0.3730707, 0.0000000, 0.7009117, 0.4433391, 0.3101907, 0.3335912, 0.4017934, 0.3828707</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="co">#gi_stars &lt;- dengue_nb %&gt;% </span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  group_by(epiweek) %&gt;% </span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(gi_star = local_gstar_perm(</span></span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a><span class="co">#    total_count, nb, wt)) %&gt;% </span></span>
+<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a><span class="co">#  tidyr::unnest(gi_star)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These are towns with no observations. However, since they exist as neighbors of other cities we need to add dummy observations for all the weeks for each of these towsn as well to get 258 * 20 = 5160 observations for spacetime cube later:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"neighbors of region 1: "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>neighbors of region 1: </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>( dengue_nb[<span class="dv">1</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1]   1   6 118 160</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"neighbors of region 6: "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>neighbors of region 6: </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>( dengue_nb[<span class="dv">6</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1]   1   6  12  13 118 160 165 249</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"neighbors of region 118: "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>neighbors of region 118: </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>( dengue_nb[<span class="dv">118</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1]   1   6  13  14 118</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"neighbors of region 118: "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>neighbors of region 118: </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>( dengue_nb[<span class="dv">118</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1]   1   6  13  14 118</code></pre>
+</div>
+</div>
+</section>
+<section id="computing-gi" class="level2">
+<h2 class="anchored" data-anchor-id="computing-gi"><strong>Computing Gi*</strong></h2>
+<p>isolating only one week :</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>dengue_nb_week31 <span class="ot">=</span> <span class="fu">filter</span>(dengue_nb, dengue_nb<span class="sc">$</span>epiweek <span class="sc">==</span> <span class="dv">31</span>)</span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dengue_nb_week31)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       VILLTOWN epiweek total_count                                      nb
+1 青草里 安南區      31           0                          1, 6, 118, 160
+2 保安里 仁德區      31           1              2, 126, 128, 138, 168, 222
+3 赤嵌里 中西區      31           0 3, 68, 69, 172, 181, 184, 185, 188, 200
+4   大成里 南區      31           0           4, 94, 97, 100, 104, 182, 207
+5 城北里 安南區      31           0                     5, 12, 13, 249, 255
+6 城南里 安南區      31           0        1, 6, 12, 13, 118, 160, 165, 249
+                                                                                                 wt
+1                                                        0.0000000, 0.3730707, 0.5166453, 0.3002859
+2                                  0.0000000, 0.3310971, 0.4857231, 0.3966444, 0.7717933, 0.8772257
+3 0.0000000, 1.2234810, 1.5459306, 1.9097265, 0.9553393, 1.1311669, 1.3578115, 2.7653647, 1.7002092
+4                              0.000000, 1.286031, 2.993138, 1.862438, 2.166602, 1.013777, 1.011906
+5                                             0.0000000, 1.4041477, 1.1310013, 0.6159622, 0.4135746
+6            0.3730707, 0.0000000, 0.7009117, 0.4433391, 0.3101907, 0.3335912, 0.4017934, 0.3828707</code></pre>
+</div>
+</div>
+<p>some of them have no neighbors</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lengths</span>(dengue_nb_week31[<span class="dv">1</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>dengue_nb_week31[<span class="dv">187</span>, ]<span class="sc">$</span>nb</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 144 155 156 186 187 256 257</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lengths</span>(dengue_nb_week31[<span class="dv">187</span>, ]<span class="sc">$</span>nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"--------------"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "--------------"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="co">#card(dengue_nb_week31[1, ]$nb[1])</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"--------------"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "--------------"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co">#card(dengue_nb_week31[187, ]$nb)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co">#gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>method 2</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_idw &lt;- dengue_df_combined %&gt;%</span></span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(nb = st_contiguity(geometry),</span></span>
+<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a><span class="co">#         wts = st_inverse_distance(nb, geometry,</span></span>
+<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a><span class="co">#                                   scale = 1,</span></span>
+<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a><span class="co">#                                   alpha = 1),</span></span>
+<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a><span class="co">#         .before = 1)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>this might be useful for points that have missing towns:</p>
+<pre><code>left_join(dfx, dfy, join_by(closest(a &lt; b))) # similar to above, but only take the closest match</code></pre>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
