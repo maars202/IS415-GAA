@@ -64,7 +64,7 @@ Students are required to download them from eLearn.
 ## Data Acquisition
 
 |                                |                                                                           |
-|----------------------|--------------------------------------------------|
+|----------------------|-------------------------------------------------|
 | [**Dataset Name**]{.underline} | [**Source**]{.underline}                                                  |
 | TAIWAN_VILLAGE_2020            | Historical map data of the village boundary: TWD97 longitude and latitude |
 | Dengue_Daily.csv               | Dengue Daily Confirmed Cases Since 1998                                   |
@@ -106,7 +106,7 @@ Getting Columns of dengue_df:
 names(dengue_df)
 ```
 
-Lets print a summary of dengue_df to find the data distribution and other info:
+Lets print a summary of dengue_df to find the data distribution and other information:
 
 ```{r}
 #| eval: false
@@ -114,11 +114,13 @@ summary(dengue_df[])
 ```
 
 We need to retrieve the coastal outline of Taiwan village so that we are able to fetch the dengue infections specifically within these boundaries.
+According to <https://epsg.io/3826>, the EPSG code for taiwan to be used as the coordinate system is 3826.
+Thus, the data has been projected to Taiwan's coordinate system using 3826.
+However since the data is already projected to Taiwan's coordinate system we do not need to do this
 
 ```{r}
 #| eval: false
-taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE") %>% 
-  st_transform(crs = 3826)
+taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE")
 taiwan_sf
 ```
 
@@ -126,9 +128,6 @@ taiwan_sf
 #| eval: false
 plot(taiwan_sf)
 ```
-
-According to <https://epsg.io/3826>, the EPSG code for taiwan to be used as the coordinate system is 3826.
-Thus, the data has been projected to Taiwan's coordinate system using 3826.
 
 ```{r}
 #| eval: false
@@ -168,7 +167,8 @@ head(dengue_df_filtered)
 |     |
 |     |
 
-filter by epiweek 31 to 50 in 2023 - <https://www.cmmcp.org/sites/g/files/vyhlif2966/f/uploads/epiweekcalendar2023.pdf>
+We need to filter the onset date column by epiweek to get epiweeks 31 to 50 of 2023.
+According to <https://www.cmmcp.org/sites/g/files/vyhlif2966/f/uploads/epiweekcalendar2023.pdf>, the start date of epiweek 31 in 2023 is 30-07-2023 and end date of epiweek 50 in 2023 is 16-12-2023.
 
 ```{r}
 #| eval: false
@@ -184,7 +184,7 @@ dengue_df_filtered = filter(dengue_df_filtered, 發病日 >= start_date & 發病
 dengue_df_filtered
 ```
 
-todo: After filtering valid points, lets convert the latitude and longitude from TWD97 to wsg84 as it conforms to google maps and most global standards for easier analysis.
+After filtering valid points, lets convert the latitude and longitude from wsg84 to TWD97 as it conforms Taiwan's coordinate system for easier analysis and for us to join it with the taiwan_sf later.
 
 <!--#  3826 https://epsg.io/transform#s_srs=3826&t_srs=4326&ops=3830&x=NaN&y=NaN -->
 
@@ -197,15 +197,6 @@ st_transform(crs = 3826)
 glimpse(dengue_df_filtered)
 ```
 
-```{r}
-#| eval: false
-tmap_mode('view')
-tm_shape(dengue_df_filtered[1:100,])+
- tm_dots()
-```
-
-最小統計區中心點X, 最小統計區中心點Y
-
 Let us save this combined dataframe to RDS so that we will not need to repeat the above steps.
 Replace filepath with the directory you would like to save the rds at.
 
@@ -215,7 +206,7 @@ filepath <- str_interp("${folderToSave}/dengue_df")
 write_rds(dengue_df_filtered, filepath) 
 ```
 
-Continue from here for subsequent steps:
+Reload the data from the file path from here for subsequent steps:
 
 ```{r}
 #| eval: false
@@ -231,10 +222,14 @@ pacman::p_load(sf, sfdep, spNetwork, tmap, classInt, viridis, tidyverse, list, a
 folderToSave <- "/Users/maarunipandithurai/Documents/maars202/geospatial/IS415-GAA/data/rds"
 ```
 
+Let's read the taiwan polygon data.
+
 ```{r}
 taiwan_sf <- st_read(dsn = "../../data/takehomeassigment2/geospatial", layer="TAINAN_VILLAGE")
 head(taiwan_sf)
 ```
+
+Lets read the previously saved filtered and saved data:
 
 ```{r}
 filepath <- str_interp("${folderToSave}/dengue_df")
@@ -242,14 +237,12 @@ dengue_df <- read_rds(filepath, refhook = NULL)
 head(dengue_df) 
 ```
 
-Columns in dengue_df:
+These are the columns in chinese for dengue_df.
+It is inconvenient to use these.
+Thus, let's convert them to English.
 
 ```{r}
-names(dengue_df)
-#感染縣市
-```
-
-```{r}
+print(names(dengue_df))
 names(dengue_df)[1] = "Day_of_onset"
 names(dengue_df)[2] = "Day_of_judgement"
 names(dengue_df)[3] = "Day_of_report"
@@ -298,37 +291,29 @@ ggplotly(p)
 ```{r}
 #| eval: false
 g <- ggplot(dengue_df, aes(Infected_counties_and_cities))  
-p <-  g + geom_bar() + ggtitle("Count of Entries by 感染縣市") +  xlab("Infected_counties_and_cities") + ylab("Count")
+p <-  g + geom_bar() + ggtitle("Count of Entries by cities") +  xlab("Infected_counties_and_cities") + ylab("Count")
 
 ggplotly(p) 
-
-
-ggplotly(p)
-
 ```
 
 \
 :::
 
-```{r}
-#plots will be done later due to time constraints
-#plot(dengue_df)
-```
-
-only need county codes:
+Since we only need the polygons from D01, D02, D04, D06, D07, D08, D32 and D39 counties of Tainan City, Taiwan, we we will filter our polygons from these regions only:
 
 ```{r}
 taiwan_sf_filtered <- filter(taiwan_sf, TOWNID %in% c('D01', 'D02', 'D04', 'D06', 'D07', 'D08', 'D32', 'D39'))
 head(taiwan_sf_filtered)
 ```
 
-recode chinese column names to enlgish
+Lets look at the columns present in Taiwan_sf:
 
 ```{r}
 names(taiwan_sf_filtered)
 ```
 
-group by village town and week to get the count according to week and region
+Since we need to do an analysis of the count of cases at village level and by weeks, let's group by village town and week to get the count of cases according to village and weeks.
+Since multiple villages exist in a town and both town and village fields exist in taiwan sf, we can group by with townname as well.
 
 ```{r}
 dengue_df_count = dengue_df %>% group_by(VILLNAME, TOWNNAME, epiweek) %>%
@@ -338,12 +323,14 @@ dengue_df_count = st_drop_geometry(dengue_df_count)
 head(dengue_df_count)
 ```
 
-maybe can save here:
+We can combine villname and townname as it is representative of the region and can be used as a single column later.
 
 ```{r}
 dengue_df_count$VILLTOWN = paste(dengue_df_count$VILLNAME, dengue_df_count$TOWNNAME)
 taiwan_sf_filtered$VILLTOWN = paste(taiwan_sf_filtered$VILLNAME, taiwan_sf_filtered$TOWNNAME)
 ```
+
+We can now ungroup all the times and keep only VILLNAME, TOWNNAME, epiweek and the derived count column for the dengue cases in each region at that epiweek.
 
 ```{r}
 dengue_df_count2 = dengue_df_count %>%
@@ -361,10 +348,7 @@ As we can see there are many missing regions with no observations according to d
 We need to creating empty observations with count 0 so that we are able to create the spacetime cube later for spatiotemporal analysis.
 
 ```{r}
-#dengue_df_distribution
-#dengue_df_combined
 #for each town check if the week exists is not then add row for that week for that reach with count 0 
-# VILLTOWN epiweek total_count                       geometry
 total_invalids = 0
 for(i in 1:nrow(taiwan_sf_filtered))
 {
@@ -382,7 +366,14 @@ for(i in 1:nrow(taiwan_sf_filtered))
 print(total_invalids)
 ```
 
-left join to aspatial data to add the attributes of aspatial to regions
+Since the epiweek and total_count are in integer format we need to cast them to integer for our analysis.
+
+```{r}
+dengue_df_count2['epiweek'] <- as.integer(unlist(dengue_df_count2['epiweek']))
+dengue_df_count2['total_count'] <- as.integer(unlist(dengue_df_count2['total_count']))
+```
+
+Lets add the attributes of dengue_df_count2 to the taiwan sf spatial dataset using a left join:
 
 ```{r}
 dengue_df_combined = left_join(taiwan_sf_filtered, dengue_df_count2)
@@ -392,7 +383,7 @@ names(dengue_df_combined)[2] = "epiweek"
 head(dengue_df_combined)
 ```
 
-dont run this
+We can look at the distribution of data for each region and check if each village has 20 weeks worth of observations.
 
 ```{r}
 dengue_df_distribution = dengue_df_combined %>% group_by(VILLTOWN) %>%
@@ -400,28 +391,35 @@ dengue_df_distribution = dengue_df_combined %>% group_by(VILLTOWN) %>%
 dengue_df_distribution
 ```
 
-Plotting distributions of all the ???
+Nice, all of them have 20 observations for weeks 31 to 50 of year 2023.
+
+Let's analyse the map of a single week 33.
 
 ```{r}
 week33 = dengue_df_combined[dengue_df_combined$epiweek == 33, ]
-#week33
 tmap_mode("plot")
 tm_shape(week33) +
   tm_fill("total_count") +
   tm_borders()
 ```
 
+Lets create an animation of the changing dengue cases over the 20 weeks.
+
 ```{r}
 vacrate_anim <-
   tm_shape(dengue_df_combined) + tm_fill("total_count",
-            palette = "Greens") +
+            palette = "Purples") +
     tm_borders(lwd = 0.1) +
   tm_facets(along = "epiweek", free.coords = FALSE)
 ```
 
+This is the animated object.
+
 ```{r}
 vacrate_anim
 ```
+
+We can save this object to a gif file so that it can be viewed in an animated fashion.
 
 ```{r}
 tmap_animation(vacrate_anim, filename = "vacrate2.gif", delay = 100, width = 1280, height = 720, scale = 2)
@@ -435,11 +433,7 @@ dengue_df_combined = st_drop_geometry(dengue_df_combined)
 head(dengue_df_combined)
 ```
 
-```{r}
-dengue_df_combined['epiweek'] <- as.integer(unlist(dengue_df_combined['epiweek']))
-dengue_df_combined['total_count'] <- as.integer(unlist(dengue_df_combined['total_count']))
-head(dengue_df_combined)
-```
+Lets create a spacetime object
 
 ```{r}
 bos = spacetime(dengue_df_combined, taiwan_sf_filtered,
@@ -448,9 +442,20 @@ bos = spacetime(dengue_df_combined, taiwan_sf_filtered,
 head(bos)
 ```
 
+Lets check if the spacetime object created is valid:
+
 ```{r}
 is_spacetime_cube(bos)
 ```
+
+Nice, it it valid with 20 time periods \* 258 regions.
+
+```{r}
+bos = complete_spacetime_cube(bos)
+head(bos)
+```
+
+Lets get the neighbors and weights around the region.
 
 ```{r}
 dengue_nb <- bos %>%
@@ -462,24 +467,10 @@ dengue_nb <- bos %>%
          .before = 1) %>%
   set_nbs("nb") %>%
   set_wts("wt")
-```
-
-```{r}
 head(dengue_nb)
 ```
 
-```{r}
-#gi_stars <- dengue_nb %>% 
-#  group_by(epiweek) %>% 
-#  mutate(gi_star = local_gstar_perm(
-#    total_count, nb, wt)) %>% 
-#  tidyr::unnest(gi_star)
-
-
-```
-
-These are towns with no observations.
-However, since they exist as neighbors of other cities we need to add dummy observations for all the weeks for each of these towsn as well to get 258 \* 20 = 5160 observations for spacetime cube later:
+If we look at the neighbors of 1 and its neighbors, we see that they all exist in their respective nb column which stands for neighbors and includes itself:
 
 ```{r}
 cat("neighbors of region 1: ")
@@ -489,8 +480,18 @@ print( dengue_nb[6, ]$nb)
 
 cat("neighbors of region 118: ")
 print( dengue_nb[118, ]$nb)
-cat("neighbors of region 118: ")
-print( dengue_nb[118, ]$nb)
+cat("neighbors of region 160: ")
+print( dengue_nb[160, ]$nb)
+```
+
+```{r}
+gi_stars <- dengue_nb %>% 
+  group_by(epiweek) %>% 
+  mutate(gi_star = local_gstar_perm(
+    total_count, nb, wt)) %>% 
+  tidyr::unnest(gi_star)
+
+
 ```
 
 ## **Computing Gi\***
@@ -505,7 +506,7 @@ head(dengue_nb_week31)
 some of them have no neighbors
 
 ```{r}
-lengths(dengue_nb_week31[1, ]$nb)
+unlist(dengue_nb_week31[1, ]$nb)
 ```
 
 ```{r}
@@ -519,7 +520,8 @@ print("--------------")
 ```
 
 ```{r}
-#gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)
+gi_star = local_gstar_perm( dengue_nb_week31, dengue_nb_week31$nb, dengue_nb_week31$wt)
+gi_star
 ```
 
 method 2
