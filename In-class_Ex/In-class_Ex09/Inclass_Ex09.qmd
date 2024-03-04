@@ -127,6 +127,78 @@ shan_ict <- select(cluster_vars, c(2:6))
 head(shan_ict, 10)
 ```
 
+Calculating proximity with euclidean distance:
+
+```{r}
+proxmat <- dist(shan_ict, method = 'euclidean')
+proxmat
+```
+
+```{r}
+set.seed(12345)
+gap_stat <- clusGap(shan_ict, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 10, 
+                    B = 50)
+# Print the result
+print(gap_stat, method = "firstmax")
+```
+
+```{r}
+fviz_gap_stat(gap_stat)
+```
+
+```{r}
+hclust_ward <- hclust(proxmat, method = 'ward.D')
+```
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+rect.hclust(hclust_ward, 
+            k = 6, 
+            border = 2:5)
+```
+
+Draw a line horizontally, then lower it slowly to find the relevant groupings. As you go down, the number of clusters will increase. Sometimes lowering it too much will result in ***local optimization*** which finds relationships that dont hold in more global groups.
+
+PERSONAL QUESTION: What if i want the clustering to be done only on edge on a mobile phone? Will this local optimisation result in wrong clusters to be formed? What if 2 observations that are supposed to exist in the same group are found in 2 different mobile phones? Do they all have to be aggregated to a central database before clustering can occur or can it still be optimally clustered in the 2 phones with minimal comparisons? Could this be related: <https://ieeexplore.ieee.org/document/9136696>?
+
+```{r}
+groups <- as.factor(cutree(hclust_ward, k=6))
+```
+
+```{r}
+shan_sf_cluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix.groups.`)
+```
+
+```{r}
+qtm(shan_sf_cluster, "CLUSTER")
+```
+
+```{r}
+shan.nb <- poly2nb(shan_sf)
+summary(shan.nb)
+```
+
+```{r}
+plot(st_geometry(shan_sf), border = grey(.5))
+```
+
+```{r}
+plot(st_geometry(shan_sf), border = grey(.5))
+pts <- st_coordinates((st_centroid(shan_sf)))
+plot(shan.nb, 
+     pts,
+     col="blue", 
+     add=TRUE)
+```
+
+This creates graph with maximum edges, before we can proceed to get the minimum spanning tree by removing each edge and checking if its all still connected. An example of minimum spanning tree is Kruskal.
+
+Finding the clusters is not enough! We need to find a way to interpret the behaviour of each cluster using Multivariate analysis found in the Hands on exercise below. We can use the box plot to find an adequate name.
+
 Copy of Handson exercise for faster reference:
 
 ## **Overview**
@@ -761,6 +833,8 @@ In this section, you will learn how to derive spatially constrained cluster by u
 First, we need to convert `shan_sf` into SpatialPolygonsDataFrame. This is because SKATER function only support **sp** objects such as SpatialPolygonDataFrame.
 
 The code chunk below uses [*as_Spatial()*](https://r-spatial.github.io/sf/reference/coerce-methods.html) of **sf** package to convert *shan_sf* into a SpatialPolygonDataFrame called *shan_sp*.
+
+This code junk is unnecessary now!
 
 ```{r}
 shan_sp <- as_Spatial(shan_sf)
