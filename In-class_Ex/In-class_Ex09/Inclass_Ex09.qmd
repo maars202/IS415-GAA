@@ -1,5 +1,5 @@
 ---
-title: "In-Class Exercise 8: Geographical Segmentation with Spatially Constrained Clustering Techniques"
+title: "In-Class Exercise 9: Geographical Segmentation with Spatially Constrained Clustering Techniques"
 author: "Maaruni"
 execute: 
   warning: false
@@ -7,7 +7,7 @@ date: 02/23/2024
 date-modified: "`r Sys.Date()`"
 ---
 
-# In class Exercise 8
+# In class Exercise 9
 
 ## Importing R relevant packages
 
@@ -105,6 +105,27 @@ corrplot.mixed(cluster_vars.cor,
 ```
 
 This is definitely an improvement from the regular scatterplot since one half of the matrix, which will be repeated anyway, is used as shapes to better look at correlations in an intuitive manner to find possible problems of multi-collinearity. Sloped oval circles indicate higher correlation.
+
+```{r}
+cluster_vars <- shan_sf %>%
+  st_set_geometry(NULL) %>%
+  select("TS.x", "RADIO_PR", "TV_PR", "LLPHONE_PR", "MPHONE_PR", "COMPUTER_PR")
+head(cluster_vars,10)
+```
+
+Next, we need to change the rows by township name instead of row number by using the code chunk below
+
+```{r}
+row.names(cluster_vars) <- cluster_vars$"TS.x"
+head(cluster_vars,10)
+```
+
+Notice that the row number has been replaced into the township name.
+
+```{r}
+shan_ict <- select(cluster_vars, c(2:6))
+head(shan_ict, 10)
+```
 
 Copy of Handson exercise for faster reference:
 
@@ -441,8 +462,8 @@ Notice that the row number has been replaced into the township name.
 Now, we will delete the TS.x field by using the code chunk below.
 
 ```{r}
-shan_ict <- select(cluster_vars, c(2:6))
-head(shan_ict, 10)
+
+
 ```
 
 ### **12.7.2 Data Standardisation**
