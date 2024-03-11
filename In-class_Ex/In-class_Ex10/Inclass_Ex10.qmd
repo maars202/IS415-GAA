@@ -290,3 +290,15 @@ gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
 condo_resale.sf.adaptive <- cbind(condo_resale.res.sf, as.matrix(gwr.adaptive.output))
 glimpse(condo_resale.sf.adaptive)
 ```
+
+By URA Planning region
+
+```{r}
+tm_shape(mpsz_svy21[mpsz_svy21$REGION_N=="CENTRAL REGION", ])+
+  tm_polygons()+
+tm_shape(condo_resale.sf.adaptive) + 
+  tm_bubbles(col = "Local_R2",
+           size = 0.15,
+           border.col = "gray60",
+           border.lwd = 1)
+```
