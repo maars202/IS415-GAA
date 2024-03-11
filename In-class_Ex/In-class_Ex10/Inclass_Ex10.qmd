@@ -1,5 +1,5 @@
 ---
-title: "In-Class Exercise 9: Geographical Segmentation with Spatially Constrained Clustering Techniques"
+title: "In-Class Exercise 10"
 author: "Maaruni"
 execute: 
   warning: false
@@ -25,13 +25,13 @@ The code chunks below installs and launches these R packages into R environment.
 pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary, ggstatsplot)
 ```
 
-## **13.4 A short note about GWmodel**
+## **A short note about GWmodel**
 
 [**GWmodel**](https://www.jstatsoft.org/article/view/v063i17) package provides a collection of localised spatial statistical methods, namely: GW summary statistics, GW principal components analysis, GW discriminant analysis and various forms of GW regression; some of which are provided in basic and robust (outlier resistant) forms. Commonly, outputs or parameters of the GWmodel are mapped to provide a useful exploratory tool, which can often precede (and direct) a more traditional or sophisticated statistical analysis.
 
-## **13.5 Geospatial Data Wrangling**
+## **Geospatial Data Wrangling**
 
-### **13.5.1 Importing geospatial data**
+### **Importing geospatial data**
 
 The geospatial data used in this hands-on exercise is called MP14_SUBZONE_WEB_PL. It is in ESRI shapefile format. The shapefile consists of URA Master Plan 2014’s planning subzone boundaries. Polygon features are used to represent these geographic boundaries. The GIS data is in svy21 projected coordinates systems.
 
@@ -43,7 +43,7 @@ mpsz = st_read(dsn = "../../data/geospatial/week10", layer = "MP14_SUBZONE_WEB_P
 
 The report above shows that the R object used to contain the imported MP14_SUBZONE_WEB_PL shapefile is called *mpsz* and it is a simple feature object. The geometry type is *multipolygon*. it is also important to note that mpsz simple feature object does not have EPSG information.
 
-### **13.5.2 Updating CRS information**
+### **Updating CRS information**
 
 The code chunk below updates the newly imported *mpsz* with the correct ESPG code (i.e. 3414)
 
@@ -67,9 +67,9 @@ Next, you will reveal the extent of *mpsz_svy21* by using `st_bbox()` of sf pack
 st_bbox(mpsz_svy21) #view extent
 ```
 
-## **13.6 Aspatial Data Wrangling**
+## **Aspatial Data Wrangling**
 
-### **13.6.1 Importing the aspatial data**
+### **Importing the aspatial data**
 
 The *condo_resale_2015* is in csv file format. The codes chunk below uses `read_csv()` function of **readr** package to import *condo_resale_2015* into R as a tibble data frame called *condo_resale*.
 
@@ -99,7 +99,7 @@ Next, `summary()` of base R is used to display the summary statistics of *cond_r
 summary(condo_resale)
 ```
 
-### **13.6.2 Converting aspatial data frame into a sf object**
+### **Converting aspatial data frame into a sf object**
 
 Currently, the *condo_resale* tibble data frame is aspatial. We will convert it to a **sf** object. The code chunk below converts condo_resale data frame into a simple feature data frame by using `st_as_sf()` of **sf** packages.
 
@@ -120,4 +120,173 @@ Personal Notes:
 #| fig-width: 12
 #| fig-height: 12
 ggcorrmat(condo_resale[,5:23])
+```
+
+### Building hedonic pricing model using multiple linear regression method
+
+In this code, using SELLING_PRICE, ,AREA_SQM and AGE as predictors/independent variables for building the model:
+
+```{r}
+condo.mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE    + 
+                  PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
+                  PROX_URA_GROWTH_AREA + PROX_HAWKER_MARKET + PROX_KINDERGARTEN + 
+                  PROX_MRT  + PROX_PARK + PROX_PRIMARY_SCH + 
+                  PROX_TOP_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_SUPERMARKET + 
+                  PROX_BUS_STOP + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                data=condo_resale.sf)
+summary(condo.mlr)
+```
+
+```{r}
+condo.mlr1 <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
+                   PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
+                   PROX_URA_GROWTH_AREA + PROX_MRT  + PROX_PARK + 
+                   PROX_PRIMARY_SCH + PROX_SHOPPING_MALL    + PROX_BUS_STOP + 
+                   NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD,
+                 data=condo_resale.sf)
+ols_regress(condo.mlr1)
+```
+
+We use the function tbl_regression to create a regression report:
+
+```{r}
+tbl_regression(condo.mlr1, intercept = TRUE)
+```
+
+We can change the report slightly to gives additional information such as R square value and adjusted R square value and other metrics. This is a frequently tested machine learning concept. Interesting! Adding more metrics:
+
+```{r}
+tbl_regression(condo.mlr1, 
+               intercept = TRUE) %>% 
+  add_glance_source_note(
+    label = list(sigma ~ "\U03C3"),
+    include = c(r.squared, adj.r.squared, 
+                AIC, statistic,
+                p.value, sigma))
+```
+
+## Visualising Coefficient
+
+```{r}
+#| fig-width: 12
+#| fig-height: 15
+mlr.p <- ggcoefstats(condo.mlr1, sort = "ascending")
+mlr.p
+```
+
+Personal questions and notes:
+
+-   why is this plot much more messier than prof's plot? Ans: need to adjust figure's height and width
+
+-   Seeing a shorter line/interval indicates higher confidence than a longer line which indicates that the value is less stable resulting in higher range of possible values for the independent variable
+
+-   if coefficient/independent variable is not normally distributed, replace "parametric" with "median" variable for meta.type variable in ggcoefstats function
+
+-   using sort="ascending" will make clearer.
+
+-   Interpreting B: Any one unit increase of independent variable, there will be increase in resale price. E.g. 1 m\^2 increaes in area_sqm results in 12777.52 increase in resale price.
+
+-   important to specify longlat as False since the lat long has already been projected above (in metres!) to the correct distance so the circles do not have be recalculated
+
+-   the cv value converges eventually to get the fixed distance
+
+The ***cv value converges*** eventually to get the fixed distance
+
+First, we will export the residual of the hedonic pricing model and save it as a data frame.
+
+```{r}
+mlr.output <- as.data.frame(condo.mlr1$residuals)
+```
+
+Next, we will join the newly created data frame with *condo_resale.sf* object.
+
+```{r}
+condo_resale.res.sf <- cbind(condo_resale.sf, 
+                        condo.mlr1$residuals) %>%
+rename(`MLR_RES` = `condo.mlr1.residuals`)
+```
+
+```{r}
+condo_resale.sp <- as_Spatial(condo_resale.res.sf)
+condo_resale.sp
+```
+
+```{r}
+bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                     PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
+                     PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
+                     PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + 
+                     FAMILY_FRIENDLY + FREEHOLD, 
+                   data=condo_resale.sp, 
+                   approach="CV", 
+                   kernel="gaussian", 
+                   adaptive=FALSE, 
+                   longlat=FALSE)
+```
+
+We can round up the final result 971...m to 1000m.
+
+GWModel method
+
+```{r}
+gwr.fixed <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                         PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
+                         PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
+                         PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + 
+                         FAMILY_FRIENDLY + FREEHOLD, 
+                       data=condo_resale.sp, 
+                       bw=bw.fixed, 
+                       kernel = 'gaussian', 
+                       longlat = FALSE)
+gwr.fixed
+```
+
+Geogrpahically weighted result such as the "GWR coefficient estimates" and "model calibration" results are the new additional insights we can get from the above chart. It will build multiple models, each with their own estimates. The significance stars report can be compared with the diagnostic information. Both of them have r squared and r square adjusted metrics (which is used to compare the performance of models). ***Spatially accounting for the model - improved the explanatory power of model - one can account for 84% of the model while other one only accounts for 64% of the model!***
+
+The number of neighbors for best CV value is recommended in adaptive bandwith method. It shows that 30 neighbors is the recommended data points to be used below. Personal observation: At one point it goes below 30 and adjusts itself to converge to 30 for optimal CV value.
+
+```{r}
+bw.adaptive <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE  + 
+                        PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE    + 
+                        PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                        PROX_PRIMARY_SCH + PROX_SHOPPING_MALL   + PROX_BUS_STOP + 
+                        NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                      data=condo_resale.sp, 
+                      approach="CV", 
+                      kernel="gaussian", 
+                      adaptive=TRUE, 
+                      longlat=FALSE)
+```
+
+```{r}
+gwr.adaptive <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
+                            PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+                            PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                            PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_BUS_STOP + 
+                            NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                          data=condo_resale.sp, bw=bw.adaptive, 
+                          kernel = 'gaussian', 
+                          adaptive=TRUE, 
+                          longlat = FALSE)
+gwr.adaptive
+```
+
+The model can be explained by up to 85%! It is a light increase from fixed bandwidth method. ***gwr.adaptive variable can be inspective for each variable standard error in the format (feature_name)\_SE***
+
+We are interested in the SDF which has the spatial points so use dollar sign to get the subset of table:
+
+```{r}
+condo_resale.sf.adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+condo_resale.sf.adaptive.svy21 <- st_transform(condo_resale.sf.adaptive, 3414)
+condo_resale.sf.adaptive.svy21  
+```
+
+```{r}
+gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+condo_resale.sf.adaptive <- cbind(condo_resale.res.sf, as.matrix(gwr.adaptive.output))
+glimpse(condo_resale.sf.adaptive)
 ```
