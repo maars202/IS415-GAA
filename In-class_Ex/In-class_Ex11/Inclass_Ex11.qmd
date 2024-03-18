@@ -37,7 +37,7 @@ date-modified: "`r Sys.Date()`"
 
     -   When the cart is allowed to stop splitting the groups, specify the process by stating these variables in the model:
 
-        -    the leaves of the tree should have size minimum leaf size — by default, minimum leaf size is 5
+        -   the leaves of the tree should have size minimum leaf size — by default, minimum leaf size is 5
 
         -   Max depth of tree 
 
@@ -65,7 +65,7 @@ The code chunks below installs and launches these R packages into R environment.
 
 ```{r}
 pacman::p_load(sf, spdep, GWmodel, SpatialML, 
-               tmap, rsample, tidymodels, gtsummary,
+               tmap, rsample, tidymodels, gtsummary, tidyverse,
                rpart, rpart.plot, 
                ggstatsplot, performance, Metrics, tidyverse)
 ```
@@ -86,7 +86,7 @@ Some notes about the packages:
 
 ```{r}
 #| eval: false
-rs_sf <- read_rds("../../data/data_week11/rds/HDB_resale2.rds")
+rs_sf <- read_rds("data/rds/HDB_resale.rds")
 ```
 
 It is in simple feature collection format.
@@ -217,9 +217,14 @@ rs_rp <- rpart(resale_price ~ FLOOR_AREA_SQM +                  STOREY_ORDER + R
 summary(rs_rp)
 ```
 
+Generates partitioning explanation diagram, which is a ***binary tree*** to explain where the split points occur:
+
 ```{r}
+#| eval: false
 rpart.plot(rs_rp)
 ```
+
+Good to use as data scientists can easily refer to diagram to create SQL statements for each of the classfiied groups.
 
 ### Calibrating Random Forest Model
 
@@ -228,3 +233,114 @@ We can calibrate the modelto predict HDB resale price using random forest functi
 ```{r}
 
 ```
+
+### Variable Importance
+
+```{r}
+#| eval: false
+set.seed(1234)
+rs_rf <- ranger(resale_price ~ FLOOR_AREA_SQM +                  STOREY_ORDER + REMAINING_LEASE_MTHS +
+               PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+               PROX_MRT + PROX_PARK + PROX_GOOD_PRISCH + PROX_MALL  +
+               PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+               WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+               WITHIN_1KM_PRISCH,
+                data=train_df, 
+               importance = "impurity")
+rs_rf[["variable.importance"]]
+```
+
+Variance of responses is determined by importance criterion which can be "impurity" or others as well.
+
+Lets take a closer look at the variables' contribution to the reparitioning process by creating a dataframe from the variable's importance:
+
+```{r}
+#| eval: false
+vi <- as.data.frame(rs_rf$variable.importance)
+vi$variables <- rownames(vi)
+vi <- vi  %>%
+  rename(vi = "rs_rf$variable.importance")
+```
+
+This create vi column with the column names.
+
+```{r}
+#| eval: false
+ggplot(vi, 
+       aes(x = vi,
+           y = reorder(variables, vi))) + 
+  geom_bar(stat = "identity")
+```
+
+Just nice all of the variables have differing orders. However, if all the bars are the same size, then it is the quasi-separation issue! The variables are not contributing to the splits! Then, we need to remove those variables are they do not contribute the the divisions.
+
+```{r}
+#| eval: false
+bw_adaptive <- bw.gwr(resale_price ~ floor_area_sqm +
+                  storey_order + remaining_lease_mths +
+                  PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+                  PROX_MRT + PROX_PARK + PROX_MALL + 
+                  PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+                  WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+                  WITHIN_1KM_PRISCH,
+                  data=train_df,
+                  kernel="adaptive",
+                  coords = coords_train,
+                  bw.min = 25,
+                  bw.max = 60,
+                  step = 1,
+                  nthreads = 16,
+                  forest = FALSE,
+                  weighted = TRUE)
+```
+
+With bandwidth, insert this into the model:
+
+```{r}
+#| eval: false
+set.seed(1234)
+rs_grf <- grf(formula = resale_price ~ floor_area_sqm + storey_order +
+                       remaining_lease_mths + PROX_CBD + PROX_ELDERLYCARE +
+                       PROX_HAWKER + PROX_MRT + PROX_PARK + PROX_MALL +
+                       PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+                       WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+                       WITHIN_1KM_PRISCH,
+                     dframe=train_data, 
+                     bw=55,
+                     kernel="adaptive",
+                     coords=coords_train)
+```
+
+```{r}
+#| eval: false
+write_rds(rs_grf, "path")
+```
+
+## Reloading the model provided
+
+```{r}
+
+```
+
+```{r}
+#| eval: false
+test_df = cbind()
+```
+
+Only one column:
+
+```{r}
+grf_pred = read_rds("data/models/grf_pred.rds")
+grf_pred_df = as.data.frame(grf_pred)
+```
+
+Combine with another column:
+
+```{r}
+#| eval: false
+test_pred = test_df %>%
+  select(RESALE_PRICE) %>%
+  cbind(grf_pred_df)
+```
+
+Problem: Since test_df couldnt be loaded earlier, this is not runnable.
