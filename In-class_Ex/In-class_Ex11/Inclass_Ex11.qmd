@@ -1,0 +1,230 @@
+---
+title: "In-Class Exercise 9 - week 11"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 02/23/2024
+date-modified: "`r Sys.Date()`"
+---
+
+# In class Exercise 9
+
+## Lecture Notes
+
+-   Model comparison and assessment both use only test data to get the metrics
+
+-   Recursive partitioning - how to link to single and multiple linear regression: cannot see and visualise the stuff similar to multiple linear regression
+
+-   Simple splitting rules, provides purities or impurities — concept in analytics foundation
+
+-   Response variable - predictive variable 
+
+-   Categorical or numerical — not such a stringent required?
+
+-   Splitting rule — always mutually exclusive — model will take care of it - important to note when explaining the model - is it similar to hierarchical clustering where the groups might share commonalities and as we go down the graph they are more exclusively grouped and can only belong to one group? 
+
+-   Regression tree and decision tree 
+
+-   Categorical or numerical — since categorical for churn, — good for decision/classfication tree — using the classes
+
+-   Property price — average price of price — find out best split rules — use average to get the splitting rule - (important)Unlike single variable regression which uses all values and draws a line to get the relationship 
+
+-   Continuous predictor — best split value — always mutually exclusive — like 12.3 is chosen as the split point for determining churn rate
+
+-   Must state explicitly whether the categorical variable is nominal or ordinal
+
+-   CART:
+
+    -   When the cart is allowed to stop splitting the groups, specify the process by stating these variables in the model:
+
+        -    the leaves of the tree should have size minimum leaf size — by default, minimum leaf size is 5
+
+        -   Max depth of tree 
+
+-   The splitting at each level — it can be based on the same predictors from previous level
+
+-   If dataset is very small, the model might overfit — so recursive partitioning is inefficient 
+
+-   Advanced recursive partitioning/random forest expands on this idea and prevents overfitting problem by (bagging method)creating large number of decision trees(an ensemble used together to get the overall prediction) — gets subsets from existing dataset and puts each subset into each of the trees - the trees might have overlaps and duplicates
+
+-   Bootstrap forest is another different method
+
+-   We cannot put x, y coordinates for the gwRF! - requires us to define the spatial properties — fixed or adaptive distance to get the variables that we can plug into the tree - not the x, y coordinates 
+
+## **The Data**
+
+Two data sets will be used in this model building exercise, they are:
+
+-   URA Master Plan subzone boundary in shapefile format (i.e. *MP14_SUBZONE_WEB_PL*)
+
+-   condo_resale_2015 in csv format (i.e. *condo_resale_2015.csv*)
+
+## **Getting Started**
+
+The code chunks below installs and launches these R packages into R environment.
+
+```{r}
+pacman::p_load(sf, spdep, GWmodel, SpatialML, 
+               tmap, rsample, tidymodels, gtsummary,
+               rpart, rpart.plot, 
+               ggstatsplot, performance, Metrics, tidyverse)
+```
+
+Some notes about the packages:
+
+-   SpatialML – only for random forests but not any other machine learning models
+
+-   tidymodels is useful for getting all the machine learning models! It is a wrapper that combines other packages such as yardstick for performance measurement, etc.
+
+-   rpart, rpart.plot are only in the in class exercise - used for recursive partitioning
+
+## 
+
+## **Geospatial Data Wrangling**
+
+### **Importing geospatial data**
+
+```{r}
+#| eval: false
+rs_sf <- read_rds("../../data/data_week11/rds/HDB_resale2.rds")
+```
+
+It is in simple feature collection format.
+
+```{r}
+#| eval: false
+set.seed(1234)
+resale_split <- initial_split(rs_sf, 
+                              prop = 5/10,)
+train_data <- training(resale_split)
+test_data <- testing(resale_split)
+```
+
+Rsample is very useful and uses 2 steps:
+
+-   Initially splitting data (can be random or stratified) - by default is random
+
+Save train and test samples and reload them to be more memory efficient.
+
+```{r}
+#| eval: false
+train_data_df <- train_data %>%
+  st_drop_geometry() %>%
+  as.data.frame()
+
+test_data_df <- test_data %>%
+  st_drop_geometry() %>%
+  as.data.frame()
+```
+
+Both of them will have one less column due to dropping geometry column.
+
+### Computing Correlation Matrix
+
+```{r}
+#| eval: false
+rs_sf1 <- rs_sf %>%
+  st_drop_geometry()
+ggcorrmat(rs_sf1[, 2:17])
+```
+
+R function to convert to upper class
+
+```{r}
+#| eval: false
+toupper("floor_area_sqm +
+                  storey_order + remaining_lease_mths +
+                  PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+                  PROX_MRT + PROX_PARK + PROX_MALL + 
+                  PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+                  WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+                  WITHIN_1KM_PRISCH,")
+```
+
+```{r}
+#| eval: false
+rs_mlr <- lm(resale_price ~ FLOOR_AREA_SQM +                  STOREY_ORDER + REMAINING_LEASE_MTHS + PROX_CHAS +
+               PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+               PROX_MRT + PROX_PARK + PROX_GOOD_PRISCH + PROX_MALL  +
+               PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+               WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+               WITHIN_1KM_PRISCH,
+                data=train_df)
+summary(rs_mlr)
+summary(rs_mlr)
+```
+
+### Revising mlr model
+
+```{r}
+#| eval: false
+train_df <- train_df %>%
+  select(-c(PROX_CHAS))
+train_sf <- train_sf %>%
+  select(-c(PROX_CHAS))
+
+test_df <- test_df %>%
+  select(-c(PROX_CHAS))
+test_sf <- test_sf %>%
+  select(-c(PROX_CHAS))
+```
+
+CHAS variable might not be be a signifcant contributor since its a Singapore policy that motivates health prices, NOT resale prices for house, as CHAS members get discounts for hospital charges, etc. So after removing it we will have 1 less variable.
+
+So lets get rs_mlr without PROX_CHAS variable:
+
+```{r}
+#| eval: false
+rs_mlr <- lm(resale_price ~ FLOOR_AREA_SQM +                  STOREY_ORDER + REMAINING_LEASE_MTHS +
+               PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+               PROX_MRT + PROX_PARK + PROX_GOOD_PRISCH + PROX_MALL  +
+               PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+               WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+               WITHIN_1KM_PRISCH,
+                data=train_df)
+summary(rs_mlr)
+```
+
+### Training Data
+
+```{r}
+#| eval: false
+train_data_sp <- as_Spatial(train_data)
+train_data_sp
+```
+
+This code chunk extracts out the x, y coordinates of full, training and testing data sets.
+
+```{r}
+#| eval: false
+coords <- st_coordinates(rs_sf)
+coords_train <- st_coordinates(train_sf)
+coords_test <- st_coordinates(test_sf)
+```
+
+### Recursive paritioning
+
+```{r}
+#| eval: false
+set.seed(1234)
+rs_rp <- rpart(resale_price ~ FLOOR_AREA_SQM +                  STOREY_ORDER + REMAINING_LEASE_MTHS +
+               PROX_CBD + PROX_ELDERLYCARE + PROX_HAWKER +
+               PROX_MRT + PROX_PARK + PROX_GOOD_PRISCH + PROX_MALL  +
+               PROX_SUPERMARKET + WITHIN_350M_KINDERGARTEN +
+               WITHIN_350M_CHILDCARE + WITHIN_350M_BUS +
+               WITHIN_1KM_PRISCH,
+                data=train_df)
+summary(rs_rp)
+```
+
+```{r}
+rpart.plot(rs_rp)
+```
+
+### Calibrating Random Forest Model
+
+We can calibrate the modelto predict HDB resale price using random forest function.
+
+```{r}
+
+```
