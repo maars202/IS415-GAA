@@ -469,7 +469,7 @@ airbnb.mlr.output <- as.data.frame(airbnb.mlr1$residuals)
 
 ## Reflections/Personal Take
 
-This hands on exercise was insightful in helping my understand spatial relations and how it can be used for predictive modelling. The problem of multicollinearity was also exciting to understand in this exercise as it is commonly discussed in machine learning blogs and understanding it in depth for spatial usecases was exciting for me.
+This hands on exercise was insightful in helping form a more solid understanding of what features to use for end users. As human users, it will be difficult for them to calculate spatially weighted relationships with the naked eye and this app will definitely be useful in helping them understand the relationship between price and all the various variables easily. It also makes the regression models more explainable.
 
 ## **13.10 Reference**
 
