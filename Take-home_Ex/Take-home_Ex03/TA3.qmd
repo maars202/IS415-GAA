@@ -3,7 +3,7 @@ title: "Take Home Exercise 3: Calibrating Hedonic Pricing Model for Airbnb Housi
 author: "Maaruni"
 execute: 
   warning: false
-date: 03/08/2024
+date: 03/25/2024
 ---
 
 ## Take Home Assignment 3
@@ -28,7 +28,7 @@ The design of the app will allow users to seamlessly select between the 3 main m
 
 Below these maps, there will be a table used to present the various publication quality reports for more detail inclined individuals to see for themselves the exact values and quality of the model such as with the use of sum of squares that indicates how much the prediction varies from actual values.
 
-## **13.2 The Data**
+## **The Data**
 
 Two data sets will be used in this model building exercise, they are:
 
@@ -36,7 +36,7 @@ Two data sets will be used in this model building exercise, they are:
 
 -   airbnb prices in csv format (i.e. listings*.csv*)
 
-## **13.3 Getting Started**
+## **Getting Started**
 
 Before we get started, it is important for us to install the necessary R packages into R and launch these R packages into R environment.
 
@@ -66,7 +66,9 @@ The R packages needed for this exercise are as follows:
 
     -   **tmap**
 
--   Ggplotly will also be used for 3D possible visualisations for a more interactive user experience.
+-   Ggplotly will also be used for 3D possible visualisations for a more interactive user experience. It is seen as relatively more mature package due to its ease of use in being able to download images from the interface itself, being able to zoom into details with the generated charts, etc.
+
+-   Mapbox can also be used within ggplotly. However, one drawback is that it needs an api key to be generated for full usage. It has various advantages including more detailed view - aerial, etc. that can be useful for airbnb future rentors when they want to see nearby shops and such that may be available.
 
 The code chunks below installs and launches these R packages into R environment.
 
@@ -88,7 +90,7 @@ mpsz = st_read(dsn = "../../data/geospatial/week10", layer = "MP14_SUBZONE_WEB_P
 
 The report above shows that the R object used to contain the imported MP14_SUBZONE_WEB_PL shapefile is called *mpsz* and it is a simple feature object. The geometry type is *multipolygon*. it is also important to note that mpsz simple feature object does not have EPSG information.
 
-### **13.5.2 Updating CRS information**
+### **Updating CRS information**
 
 The code chunk below updates the newly imported *mpsz* with the correct ESPG code (i.e. 3414)
 
@@ -137,7 +139,7 @@ head(airbnb_resale$longitude) #see the data in XCOORD column
 
 Next, `summary()` of base R is used to display the summary statistics of *cond_resale* tibble data frame.
 
-### **13.6.2 Converting aspatial data frame into a sf object**
+### **Converting aspatial data frame into a sf object**
 
 Currently, the airbnb_resale tibble data frame is aspatial. We will convert it to a **sf** object. The code chunk below converts airbnb_resale data frame into a simple feature data frame by using `st_as_sf()` of **sf** packages.
 
@@ -258,7 +260,7 @@ tmap_mode("plot")
 
 In this section, you will learn how to building hedonic pricing models for airbnb rental units using [`lm()`](https://www.rdocumentation.org/packages/stats/versions/3.5.2/topics/lm) of R base.
 
-### **13.8.1 Simple Linear Regression Method**
+### **Simple Linear Regression Method**
 
 First, we will build a simple linear regression model by using *PRICE* as the dependent variable and *reviews_per_month* as the independent variable.
 
@@ -291,9 +293,9 @@ ggplot(data=airbnb_resale.sf,
   geom_smooth(method = lm)
 ```
 
-### **13.8.2 Multiple Linear Regression Method**
+### **Multiple Linear Regression Method**
 
-#### 13.8.2.1 Visualising the relationships of the independent variables
+#### Visualising the relationships of the independent variables
 
 Before building a multiple regression model, it is important to ensure that the indepdent variables used are not highly correlated to each other. If these highly correlated independent variables are used in building a regression model by mistake, the quality of the model will be compromised. This phenomenon is known as **multicollinearity** in statistics.
 
@@ -338,7 +340,7 @@ Matrix reorder is very important for mining the hiden structure and patter in th
 
 From the scatterplot matrix, it is clear that ***Freehold*** is highly correlated to ***LEASE_99YEAR***. In view of this, it is wiser to only include either one of them in the subsequent model building. As a result, ***LEASE_99YEAR*** is excluded in the subsequent model building.
 
-### **13.8.3 Building a hedonic pricing model using multiple linear regression method**
+### **Building a hedonic pricing model using multiple linear regression method**
 
 The code chunk below using `lm()` to calibrate the multiple linear regression model.
 
@@ -355,7 +357,7 @@ summary(airbnb.mlr)
 
 ```
 
-### **13.8.4 Preparing Publication Quality Table: olsrr method**
+### **Preparing Publication Quality Table: olsrr method**
 
 With reference to the report above, it is clear that not all the independent variables are statistically significant. We will revised the model by removing those variables which are not statistically significant.
 
@@ -369,7 +371,7 @@ airbnb.mlr1 <- lm(formula = price ~ minimum_nights + number_of_reviews    +
 ols_regress(airbnb.mlr1)
 ```
 
-### **13.8.5 Preparing Publication Quality Table: gtsummary method**
+### **Preparing Publication Quality Table: gtsummary method**
 
 The [**gtsummary**](https://www.danieldsjoberg.com/gtsummary/) package provides an elegant and flexible way to create publication-ready summary tables in R.
 
@@ -393,7 +395,7 @@ tbl_regression(airbnb.mlr1,
 
 For more customisation options, refer to [Tutorial: tbl_regression](https://www.danieldsjoberg.com/gtsummary/articles/tbl_regression.html)
 
-#### 13.8.5.1 Checking for multicolinearity
+#### Checking for multicolinearity
 
 In this section, we would like to introduce you a fantastic R package specially programmed for performing OLS regression. It is called [**olsrr**](https://olsrr.rsquaredacademy.com/). It provides a collection of very useful methods for building better multiple linear regression models:
 
@@ -421,7 +423,7 @@ ols_vif_tol(airbnb.mlr1)
 
 Since the VIF of the independent variables are less than 10. We can safely conclude that there are no sign of multicollinearity among the independent variables.
 
-#### 13.8.5.2 Test for Non-Linearity
+#### Test for Non-Linearity
 
 In multiple linear regression, it is important for us to test the assumption that linearity and additivity of the relationship between dependent and independent variables.
 
@@ -433,7 +435,7 @@ ols_plot_resid_fit(airbnb.mlr1)
 
 The figure above reveals that most of the data poitns are scattered around the 0 line, hence we can safely conclude that the relationships between the dependent variable and independent variables are linear.
 
-#### 13.8.5.3 Test for Normality Assumption
+#### Test for Normality Assumption
 
 Lastly, the code chunk below uses [`ols_plot_resid_hist()`](https://olsrr.rsquaredacademy.com/reference/ols_plot_resid_hist.html) of *olsrr* package to perform normality assumption test.
 
@@ -451,11 +453,11 @@ ols_test_normality(airbnb.mlr1)
 
 The summary table above reveals that the p-values of the four tests are way smaller than the alpha value of 0.05. Hence we will reject the null hypothesis and infer that there is statistical evidence that the residual are not normally distributed.
 
-Multiple Linear Regression model created and can be used for prediction
+Multiple Linear Regression model created and can be used for prediction.
 
 These results will be displayed on Shiny app.
 
-#### 13.8.5.4 Testing for Spatial Autocorrelation
+#### Testing for Spatial Autocorrelation
 
 The hedonic model we try to build are using geographically referenced attributes, hence it is also important for us to visual the residual of the hedonic pricing model.
 
