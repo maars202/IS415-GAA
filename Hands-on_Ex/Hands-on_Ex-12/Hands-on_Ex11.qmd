@@ -1,0 +1,88 @@
+---
+title: "Hands-on Exercise 11 - Week 12: Calibrating Spatial Interaction Models with R"
+author: "Maaruni"
+execute: 
+  warning: false
+date: 03/31/2024
+date-modified: "`r Sys.Date()`"
+---
+
+## **14.1 Overview**
+
+Spatial Interaction Models (SIMs) are mathematical models for estimating flows between spatial entities developed by Alan Wilson in the late 1960s and early 1970, with considerable uptake and refinement for transport modelling since then Boyce and Williams (2015).
+
+There are four main types of traditional SIMs (Wilson 1971):
+
+-   Unconstrained
+
+-   Production-constrained
+
+-   Attraction-constrained
+
+-   Doubly-constrained
+
+Ordinary least square (OLS), log-normal, Poisson and negative binomial (NB) regression methods have been used extensively to calibrate OD flow models by processing flow data as different types of dependent variables. In this chapter, you will gain hands-on experiences on using appropriate R packages to calibrate SIM by using there four regression methods.
+
+### **14.1.1 Learning outcome**
+
+In this exercise, we are going to calibrate SIM to determine factors affecting the public bus passenger flows during the morning peak in Singapore.
+
+## **14.2 The Data**
+
+This exercise is a continuation of **Chapter 15: Processing and Visualising Flow Data** and the following data will be used:
+
+-   *od_data.rds*, weekday morning peak passenger flows at planning subzone level.
+
+-   *mpsz.rds*, URA Master Plan 2019 Planning Subzone boundary in simple feature tibble data frame format.
+
+Beside these two data sets, an additional attribute data file called pop.csv will be provided. It
+
+## **14.3 Installing and Loading R packages**
+
+For the purpose of this exercise, four r packages will be used. They are:
+
+-   sf for importing, integrating, processing and transforming geospatial data.
+
+-   tidyverse for importing, integrating, wrangling and visualising data.
+
+-   tmap for creating thematic maps.
+
+    ```{r}
+    pacman::p_load(tmap, sf, sp,
+                   performance, reshape2,
+                   ggpubr, tidyverse)
+    ```
+
+## **16.5 Computing Distance Matrix**
+
+In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location’s distance from itself, which is shown in the main diagonal of the table, is 0.
+
+![](https://r4gdsa.netlify.app/chap16/img/image16-1.jpg)
+
+In this section, you will learn how to compute a distance matrix by using URA Master Plan 2019 Planning Subzone boundary in which you saved as an rds file called *mpsz*.
+
+First, let us import *mpsz.rds* into R environemnt by using the code chunk below.
+
+```{r}
+#| eval: false
+mpsz <- read_rds("./data/rds/mpsz.rds")
+mpsz
+```
+
+### **Converting from sf data.table to SpatialPolygonsDataFrame**
+
+There are at least two ways to compute the required distance matrix. One is based on sf and the other is based on sp. Past experience shown that computing distance matrix by using sf function took relatively longer time that sp method especially the data set is large. In view of this, sp method is used in the code chunks below.
+
+First [`as.Spatial()`](https://r-spatial.github.io/sf/reference/coerce-methods.html) will be used to convert *mpsz* from sf tibble data frame to SpatialPolygonsDataFrame of sp object as shown in the code chunk below.
+
+```{r}
+#| eval: false
+mpsz_sp <- as(mpsz, "Spatial")
+mpsz_sp
+```
+
+## Reflections/Personal Take
+
+## **13.10 Reference**
+
+-   <https://r4gdsa.netlify.app/chap13.html>
