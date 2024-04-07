@@ -121,7 +121,7 @@ st_bbox(mpsz_svy21) #view extent
 The *listings.csv* is in csv file format. The codes chunk below uses `read_csv()` function of **readr** package to import listings.csv into R as a tibble data frame called airbnb_resale.
 
 ```{r}
-airbnb_resale = read_csv("data/listings.csv")
+airbnb_resale = read_csv("data2/listings.csv")
 glimpse(airbnb_resale)
 ```
 
@@ -349,12 +349,22 @@ names(airbnb_cols)
 ```
 
 ```{r}
+airbnb_resale.sf
+```
+
+```{r}
 airbnb.mlr <- lm(formula = price ~ minimum_nights + number_of_reviews    + 
                   reviews_per_month + calculated_host_listings_count + availability_365 +
                   number_of_reviews_ltm, 
                 data=airbnb_resale.sf)
 summary(airbnb.mlr)
 
+```
+
+Finding which observations were deleted by model
+
+```{r}
+length(na.action(airbnb.mlr))
 ```
 
 ### **Preparing Publication Quality Table: olsrr method**
@@ -467,6 +477,271 @@ First, we will export the residual of the hedonic pricing model and save it as a
 
 ```{r}
 airbnb.mlr.output <- as.data.frame(airbnb.mlr1$residuals)
+```
+
+Next, we will join the newly created data frame with *condo_resale.sf* object.
+
+```{r}
+head(airbnb_resale.sf)
+```
+
+```{r}
+#airbnb_resale.sf$index
+nrow(airbnb_resale.sf)
+
+# Convert rownames to a column
+airbnb_resale.sf<- rownames_to_column(airbnb_resale.sf, var = "row_index")
+
+# View the modified dataset
+print(airbnb_resale.sf)
+```
+
+```{r}
+airbnb_resale.sf <- airbnb_resale.sf[!airbnb_resale.sf$row_index %in% na.action(airbnb.mlr), ]
+```
+
+```         
+```
+
+```{r}
+length(na.action(airbnb.mlr))
+#na.action(airbnb.mlr)
+```
+
+```{r}
+#length(airbnb.mlr1$na.action)
+```
+
+```{r}
+length(airbnb.mlr1$residuals)
+```
+
+```{r}
+airbnb_resale.res.sf <- cbind(airbnb_resale.sf, 
+                        airbnb.mlr1$residuals) %>%
+rename(`MLR_RES` = `airbnb.mlr1.residuals`)
+```
+
+Next, we will convert *condo_resale.res.sf* from simple feature object into a SpatialPointsDataFrame because spdep package can only process sp conformed spatial data objects.
+
+The code chunk below will be used to perform the data conversion process.
+
+```{r}
+airbnb_resale.sp <- as_Spatial(airbnb_resale.res.sf)
+airbnb_resale.sp
+```
+
+```{r}
+tmap_mode("view")
+```
+
+```{r}
+tm_shape(mpsz_svy21)+
+  tmap_options(check.and.fix = TRUE) +
+  tm_polygons(alpha = 0.4) +
+tm_shape(airbnb_resale.res.sf) +  
+  tm_dots(col = "MLR_RES",
+          alpha = 0.6,
+          style="quantile") +
+  tm_view(set.zoom.limits = c(11,14))
+```
+
+```{r}
+tmap_mode("plot")
+```
+
+```{r}
+nb <- dnearneigh(coordinates(airbnb_resale.sp), 0, 1, longlat = FALSE)
+summary(nb)
+```
+
+```{r}
+#lm.morantest(condo.mlr1, nb_lw)
+```
+
+```{r}
+#nb_lw <- nb2listw(nb, style = 'W')
+#summary(nb_lw)
+```
+
+```{r}
+bw.fixed <- bw.gwr(formula = price ~ minimum_nights + number_of_reviews    + 
+                  reviews_per_month + calculated_host_listings_count + availability_365 +
+                  number_of_reviews_ltm, 
+                   data=airbnb_resale.sp, 
+                   approach="CV", 
+                   kernel="gaussian", 
+                   adaptive=FALSE, 
+                   longlat=FALSE)
+```
+
+```{r}
+gwr.fixed <- gwr.basic(formula = price ~ minimum_nights + number_of_reviews    + 
+                  reviews_per_month + calculated_host_listings_count + availability_365 +
+                  number_of_reviews_ltm, 
+                   data=airbnb_resale.sp, 
+                       bw=bw.fixed, 
+                       kernel = 'gaussian', 
+                       longlat = FALSE)
+```
+
+```{r}
+gwr.fixed
+```
+
+### **13.9.2 Building Adaptive Bandwidth GWR Model**
+
+In this section, we will calibrate the gwr-based hedonic pricing model by using adaptive bandwidth approach.
+
+#### 13.9.2.1 Computing the adaptive bandwidth
+
+Similar to the earlier section, we will first use `bw.gwr()` to determine the recommended data point to use.
+
+The code chunk used look very similar to the one used to compute the fixed bandwidth except the `adaptive` argument has changed to **TRUE**.
+
+```{r}
+bw.adaptive <- bw.gwr(formula = price ~ minimum_nights + number_of_reviews    + 
+                  reviews_per_month + calculated_host_listings_count + availability_365 +
+                  number_of_reviews_ltm, 
+                   data=airbnb_resale.sp, 
+                      approach="CV", 
+                      kernel="gaussian", 
+                      adaptive=TRUE, 
+                      longlat=FALSE)
+```
+
+#### 13.9.2.2 Constructing the adaptive bandwidth gwr model
+
+Now, we can go ahead to calibrate the gwr-based hedonic pricing model by using adaptive bandwidth and gaussian kernel as shown in the code chunk below.
+
+```{r}
+gwr.adaptive <- gwr.basic(formula = price ~ minimum_nights + number_of_reviews    + 
+                  reviews_per_month + calculated_host_listings_count + availability_365 +
+                  number_of_reviews_ltm, 
+                   data=airbnb_resale.sp, bw=bw.adaptive, 
+                          kernel = 'gaussian', 
+                          adaptive=TRUE, 
+                          longlat = FALSE)
+```
+
+```{r}
+gwr.adaptive
+```
+
+This shows that adaptive is much better!.
+
+### **13.9.3 Visualising GWR Output**
+
+In addition to regression residuals, the output feature class table includes fields for observed and predicted y values, condition number (cond), Local R2, residuals, and explanatory variable coefficients and standard errors:
+
+-   Condition Number: this diagnostic evaluates local collinearity. In the presence of strong local collinearity, results become unstable. Results associated with condition numbers larger than 30, may be unreliable.
+
+-   Local R2: these values range between 0.0 and 1.0 and indicate how well the local regression model fits observed y values. Very low values indicate the local model is performing poorly. Mapping the Local R2 values to see where GWR predicts well and where it predicts poorly may provide clues about important variables that may be missing from the regression model.
+
+-   Predicted: these are the estimated (or fitted) y values 3. computed by GWR.
+
+-   Residuals: to obtain the residual values, the fitted y values are subtracted from the observed y values. Standardized residuals have a mean of zero and a standard deviation of 1. A cold-to-hot rendered map of standardized residuals can be produce by using these values.
+
+-   Coefficient Standard Error: these values measure the reliability of each coefficient estimate. Confidence in those estimates are higher when standard errors are small in relation to the actual coefficient values. Large standard errors may indicate problems with local collinearity.
+
+They are all stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame object integrated with fit.points, GWR coefficient estimates, y value, predicted values, coefficient standard errors and t-values in its “data” slot in an object called **SDF** of the output list.
+
+### **13.9.4 Converting SDF into *sf* data.frame**
+
+To visualise the fields in **SDF**, we need to first covert it into **sf** data.frame by using the code chunk below.
+
+```{r}
+airbnb_resale.sf.adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+airbnb_resale.sf.adaptive.svy21 <- st_transform(airbnb_resale.sf.adaptive, 3414)
+airbnb_resale.sf.adaptive.svy21  
+```
+
+```{r}
+gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+airbnb_resale.sf.adaptive <- cbind(airbnb_resale.res.sf, as.matrix(gwr.adaptive.output))
+```
+
+```{r}
+glimpse(airbnb_resale.sf.adaptive)
+```
+
+```{r}
+summary(gwr.adaptive$SDF$yhat)
+```
+
+### **13.9.5 Visualising local R2**
+
+The code chunks below is used to create an interactive point symbol map.
+
+```{r}
+tmap_mode("view")
+tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(airbnb_resale.sf.adaptive) +  
+  tm_dots(col = "Local_R2",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+```
+
+```{r}
+tmap_mode("plot")
+```
+
+### **13.9.6 Visualising coefficient estimates**
+
+The code chunks below is used to create an interactive point symbol map.
+
+```{r}
+names(airbnb_resale.sf.adaptive)
+```
+
+```{r}
+
+sf_use_s2(TRUE)
+tmap_mode("view")
+number_of_reviews_SE <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(airbnb_resale.sf.adaptive) +  
+  tm_dots(col = "number_of_reviews_SE",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+number_of_reviews_TV <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(airbnb_resale.sf.adaptive) +  
+  tm_dots(col = "number_of_reviews_TV",
+          size = 0.15,
+          border.col = "gray60",
+          border.lwd = 1, palette = "YlGn") +
+  tm_view(set.zoom.limits = c(11,14)) 
+
+tmap_arrange(number_of_reviews_SE, number_of_reviews_TV,  asp=1, ncol=2, sync = TRUE)
+#tm_fill/tm_borders/tm_polygons.
+#Run All Chunks AboveRun Current Chunk
+#number_of_reviews_TV
+
+```
+
+```{r}
+airbnb_resale.sf.adaptive$AREA_SQM_TV
+names(airbnb_resale.sf.adaptive)
+#airbnb_resale.sf.adaptive$Local_R2[:10]
+```
+
+```{r}
+tm_shape(mpsz_svy21[mpsz_svy21$REGION_N=="CENTRAL REGION", ])+
+  tm_polygons()+
+tm_shape(airbnb_resale.sf.adaptive) + 
+  tm_bubbles(col = "Local_R2",
+           size = 0.15,
+           border.col = "gray60",
+           border.lwd = 1)
 ```
 
 ## Reflections/Personal Take
